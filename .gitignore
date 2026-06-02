@@ -9,9 +9,9 @@ CMakeFiles/
 # object
 *.o
 
-# executable
-test
-bench
+# executable (only match built binaries, not source dirs)
+/test
+/bench
 
 # vscode
 .vscode/
