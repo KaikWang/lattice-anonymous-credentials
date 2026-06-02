@@ -10,18 +10,18 @@
 * Name:        show_verify
 *
 * Description: Verification of the zero-knowledge proof of valid 
-*              credentials (anonymous credentials show)
+*              credentials (anonymous credentials show)   有效凭证（匿名凭证显示）的零知识证明验证
 *
 * Arguments:   - const osig_proof *proof: pointer to show proof structure
-*              - const poly_qshow_mat_k_k *A_embed: array of polynomial matrices, subring embedding of q1.A'
+*              - const poly_qshow_mat_k_k *A_embed: array of polynomial matrices, subring embedding of q1.A' 多项式矩阵数组，q1.A' 的子环嵌入
 *              - const poly_qshow_mat_k_k *B_embed: array of polynomial matrices, subring embedding of q1.B
 *              - const poly_qshow_mat_k_k *A3_embed: array of polynomial matrices, subring embedding of q1.A3
 *              - const poly_qshow_mat_k_k *Ds_embed: array of polynomial matrices, subring embedding of q1.Ds
 *              - const poly_qshow_mat_k_k *D_embed: array of polynomial matrices, subring embedding of q1.D
 *              - const poly_qshow_vec_k *u_embed: array of polynomial vectors, subring embedding of q1.u
-*              - const uint8_t *crs_seed: pointer to byte array containing the CRS seed (allocated SEED_BYTES bytes)
+*              - const uint8_t *crs_seed: pointer to byte array containing the CRS seed (allocated SEED_BYTES bytes) 指向包含 CRS 种子的字节数组的指针（分配了 SEED_BYTES 字节）
 *              - const uint8_t *seed: pointer to byte array containing the seed 
-*                   for public parameters (allocated SEED_BYTES bytes)
+*                   for public parameters (allocated SEED_BYTES bytes)指向包含种子的字节数组的指针，用于公共参数（分配 SEED_BYTES 字节）
 * 
 * Returns 1 if proof could be verified correctly and 0 otherwise
 **************************************************/

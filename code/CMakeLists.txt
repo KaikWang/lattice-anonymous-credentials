@@ -8,6 +8,9 @@ set(CMAKE_C_STANDARD_REQUIRED True)
 
 add_executable(test)
 add_executable(bench)
+add_executable(lnp22_test)
+add_executable(tsampler_test)
+add_executable(huffman_test)
 
 set(SRC_DIR "${CMAKE_SOURCE_DIR}/src")
 set(TEST_DIR "${CMAKE_SOURCE_DIR}/test")
@@ -74,7 +77,9 @@ set(SOURCES_LAC
   "${SRC_DIR}/osig_proof_verify.c"
   "${SRC_DIR}/show.c"
   "${SRC_DIR}/show_prove.c"
-  "${SRC_DIR}/show_proof_verify.c")
+  "${SRC_DIR}/show_proof_verify.c"
+  "${SRC_DIR}/tsampler_sampling.c"
+  "${SRC_DIR}/sep_tsampler.c")
 
 target_sources(test PUBLIC
   "${TEST_DIR}/main.c"
@@ -88,8 +93,13 @@ target_sources(bench PUBLIC
   "${BENCH_DIR}/bench_show.c"
   "${SOURCES_LAC}")
 
+target_sources(lnp22_test PUBLIC
+  "${TEST_DIR}/lnp22_test.c"
+  "${SOURCES_LAC}")
+
 target_include_directories(test PUBLIC ${INCLUDE_DIR})
 target_include_directories(bench PUBLIC ${INCLUDE_DIR} ${BENCH_DIR})
+target_include_directories(lnp22_test PUBLIC ${INCLUDE_DIR})
 
 set(WARN_ERROR_FLAGS
   -Wall -Wextra -Wundef -Wshadow -Wpointer-arith
@@ -115,6 +125,9 @@ set(BENCH_OPTS
 target_compile_options(test PUBLIC ${WARN_ERROR_FLAGS} ${TEST_OPTS} ${SANITIZER_FLAGS})
 target_link_options(test PUBLIC ${TEST_OPTS} ${SANITIZER_FLAGS})
 
+target_compile_options(lnp22_test PUBLIC ${WARN_ERROR_FLAGS} ${TEST_OPTS})
+target_link_options(lnp22_test PUBLIC ${TEST_OPTS})
+
 target_compile_definitions(bench PUBLIC REMOVE_ASSERTS=1)
 target_compile_options(bench PUBLIC ${WARN_ERROR_FLAGS} ${BENCH_OPTS})
 target_link_options(bench PUBLIC ${BENCH_OPTS})
@@ -122,5 +135,29 @@ target_link_options(bench PUBLIC ${BENCH_OPTS})
 target_link_libraries(test PUBLIC "${CMAKE_SOURCE_DIR}/libs/flint/libflint.so")
 target_link_libraries(test PUBLIC m)
 
+target_link_libraries(lnp22_test PUBLIC "${CMAKE_SOURCE_DIR}/libs/flint/libflint.so")
+target_link_libraries(lnp22_test PUBLIC m)
+
+target_sources(tsampler_test PUBLIC
+  "${TEST_DIR}/tsampler_test.c"
+  "${SOURCES_LAC}")
+
+target_include_directories(tsampler_test PUBLIC ${INCLUDE_DIR})
+target_compile_options(tsampler_test PUBLIC ${WARN_ERROR_FLAGS} ${TEST_OPTS} ${SANITIZER_FLAGS})
+target_link_options(tsampler_test PUBLIC ${TEST_OPTS} ${SANITIZER_FLAGS})
+target_link_libraries(tsampler_test PUBLIC "${CMAKE_SOURCE_DIR}/libs/flint/libflint.so")
+target_link_libraries(tsampler_test PUBLIC m)
+
 target_link_libraries(bench PUBLIC "${CMAKE_SOURCE_DIR}/libs/flint/libflint.so")
 target_link_libraries(bench PUBLIC m)
+
+target_sources(huffman_test PUBLIC
+  "${TEST_DIR}/huffman_test.c"
+  "${SRC_DIR}/huffman_compress.c"
+  "${SOURCES_LAC}")
+
+target_include_directories(huffman_test PUBLIC ${INCLUDE_DIR})
+target_compile_options(huffman_test PUBLIC ${WARN_ERROR_FLAGS} ${TEST_OPTS} ${SANITIZER_FLAGS})
+target_link_options(huffman_test PUBLIC ${TEST_OPTS} ${SANITIZER_FLAGS})
+target_link_libraries(huffman_test PUBLIC "${CMAKE_SOURCE_DIR}/libs/flint/libflint.so")
+target_link_libraries(huffman_test PUBLIC m)

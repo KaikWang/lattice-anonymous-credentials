@@ -1,0 +1,17 @@
+# build
+build/
+code/build/
+
+# cmake
+CMakeCache.txt
+CMakeFiles/
+
+# object
+*.o
+
+# executable
+test
+bench
+
+# vscode
+.vscode/

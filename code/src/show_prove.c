@@ -92,7 +92,7 @@ static void show_user_prove_round1(
   }
 
   // computing commitments tA = A1.s1 + A2.s2, w = A1.y1 + A2.y2, tB = Byg.s2 + y3_g
-  // tA
+  // tA   计算承诺
   poly_qshow_mat_d_m1_mul_vec_m1(proof->tA, A1, s1);
   poly_qshow_mat_d_m2_mul_vec_m2(tmp_vec_d, A2, s2); 
   poly_qshow_vec_d_add(proof->tA, proof->tA, tmp_vec_d);
@@ -104,7 +104,7 @@ static void show_user_prove_round1(
   poly_qshow_mat_256l_m2_mul_vec_m2(proof->tB, Byg, s2);
   poly_qshow_vec_256_l_add(proof->tB, proof->tB, y3_g);
 
-  // computing first challenge
+  // computing first challenge  生成第一个挑战
   buf[0] = 1;
   poly_qshow_vec_d_pack(buf + SHOW_CHALLENGE_BASE_BYTES, proof->tA);
   poly_qshow_vec_d_pack(buf + SHOW_CHALLENGE_BASE_BYTES + POLYQSHOW_VECD_PACKEDBYTES, w);
@@ -123,7 +123,7 @@ static void show_user_prove_round1(
 * Name:        show_user_prove_round2 [static]
 *
 * Description: Compute round 2 of zero-knowledge proof of valid credential
-*              (anonymous credentials show)
+*              (anonymous credentials show) 这一轮实现了近似范围证明，证明某些值在有效范围内。
 *
 * Arguments:   - show_proof_t *proof: pointer to show proof structure
 *              - coeff_qshow *chal_2: array of coeff_qshow to host second challenge (gamma_{i,j}) (allocated)
@@ -199,17 +199,17 @@ static int show_user_prove_round2(
 *              - const poly_qshow *quadratic_precomp: array of polynomials containing precomputations
 **************************************************/
 static void show_user_prove_round3(
-    show_proof_t               *proof,
-    poly_qshow_vec_l           chal_3_l,
-    poly_qshow_vec_k           chal_3_dk[PARAM_D],
-    uint8_t                    buf[CHAL3_SHOW_INPUT_BYTES], 
-    poly_qshow_vec_256         sum_gamma_e_star[PARAM_L_SHOW],
-    poly_qshow_vec_m1          sum_gamma_r_star[PARAM_L_SHOW],
-    const poly_qshow_vec_m1    s1,
-    const poly_qshow_vec_m1    chal_1[PARAM_ARP_SHOW],
-    const coeff_qshow          chal_2[PARAM_L_SHOW][PARAM_ARP_SHOW + 6],
-    const poly_qshow_vec_256_l y3_g,
-    const poly_qshow           quadratic_precomp[6]) {
+    show_proof_t               *proof,         // 输出：证明结构体，存储h
+    poly_qshow_vec_l           chal_3_l,                            // 输出：第三个挑战的前l个向量
+    poly_qshow_vec_k           chal_3_dk[PARAM_D],                  // 输出：第三个挑战的后d×k个向量
+    uint8_t                    buf[CHAL3_SHOW_INPUT_BYTES],         // 输入/输出：缓冲区
+    poly_qshow_vec_256         sum_gamma_e_star[PARAM_L_SHOW],       // 输出：Σ γ_{ij}·e_j*
+    poly_qshow_vec_m1          sum_gamma_r_star[PARAM_L_SHOW],       // 输出：Σ γ_{ij}·r_j*
+    const poly_qshow_vec_m1    s1,                                  // 输入：见证向量
+    const poly_qshow_vec_m1    chal_1[PARAM_ARP_SHOW],              // 输入：第一个挑战R
+    const coeff_qshow          chal_2[PARAM_L_SHOW][PARAM_ARP_SHOW + 6],  // 输入：第二个挑战γ
+    const poly_qshow_vec_256_l y3_g,                                // 输入：掩码向量
+    const poly_qshow           quadratic_precomp[6])    {            // 输入：预计算的二次项 
   size_t i,j,k;
   poly_qshow tmp_poly;
   poly_qshow_vec_m1 tmp_vec_m1, rj_star;
@@ -558,9 +558,9 @@ static void show_user_prove_round4(
 
   // committing to garbage terms
   poly_qshow_vec_m2_mul_inner(t0, b, y2);
-  poly_qshow_add(t0, t0, e0);
+  poly_qshow_add(t0, t0, e0);// 计算 t0 = <b, y2> + e0
   poly_qshow_vec_m2_mul_inner(tmp_poly, b, s2);
-  poly_qshow_add(proof->t1, tmp_poly, e1);
+  poly_qshow_add(proof->t1, tmp_poly, e1);// 计算 t1 = <b, s2> + e1
 
   // computing fourth challenge
   kappa_c = 0;

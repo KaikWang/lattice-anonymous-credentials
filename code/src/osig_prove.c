@@ -33,7 +33,7 @@ static int _reject_exp(double threshold) {
 * Name:        osig_user_prove_round1 [static]
 *
 * Description: Compute round 1 of zero-knowledge proof of commitment opening
-*              and user registration by user (anonymous credentials issuance)
+*              and user registration by user (anonymous credentials issuance)计算承诺开示零知识证明的第1轮 * 以及用户注册（匿名凭证发放）
 *
 * Arguments:   - osig_proof_t *proof: pointer to issuance proof structure
 *              - poly_qiss_vec_k *chal_1: array of polynomial vectors to host first challenge (R = R0 - R1) (initialized)
