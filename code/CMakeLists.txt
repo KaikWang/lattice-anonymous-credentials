@@ -9,7 +9,6 @@ set(CMAKE_C_STANDARD_REQUIRED True)
 add_executable(test)
 add_executable(bench)
 add_executable(lnp22_test)
-add_executable(tsampler_test)
 add_executable(huffman_test)
 
 set(SRC_DIR "${CMAKE_SOURCE_DIR}/src")
@@ -77,9 +76,7 @@ set(SOURCES_LAC
   "${SRC_DIR}/osig_proof_verify.c"
   "${SRC_DIR}/show.c"
   "${SRC_DIR}/show_prove.c"
-  "${SRC_DIR}/show_proof_verify.c"
-  "${SRC_DIR}/tsampler_sampling.c"
-  "${SRC_DIR}/sep_tsampler.c")
+  "${SRC_DIR}/show_proof_verify.c")
 
 target_sources(test PUBLIC
   "${TEST_DIR}/main.c"
@@ -137,16 +134,6 @@ target_link_libraries(test PUBLIC m)
 
 target_link_libraries(lnp22_test PUBLIC "${CMAKE_SOURCE_DIR}/libs/flint/libflint.so")
 target_link_libraries(lnp22_test PUBLIC m)
-
-target_sources(tsampler_test PUBLIC
-  "${TEST_DIR}/tsampler_test.c"
-  "${SOURCES_LAC}")
-
-target_include_directories(tsampler_test PUBLIC ${INCLUDE_DIR})
-target_compile_options(tsampler_test PUBLIC ${WARN_ERROR_FLAGS} ${TEST_OPTS} ${SANITIZER_FLAGS})
-target_link_options(tsampler_test PUBLIC ${TEST_OPTS} ${SANITIZER_FLAGS})
-target_link_libraries(tsampler_test PUBLIC "${CMAKE_SOURCE_DIR}/libs/flint/libflint.so")
-target_link_libraries(tsampler_test PUBLIC m)
 
 target_link_libraries(bench PUBLIC "${CMAKE_SOURCE_DIR}/libs/flint/libflint.so")
 target_link_libraries(bench PUBLIC m)
