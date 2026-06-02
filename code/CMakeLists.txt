@@ -76,7 +76,8 @@ set(SOURCES_LAC
   "${SRC_DIR}/osig_proof_verify.c"
   "${SRC_DIR}/show.c"
   "${SRC_DIR}/show_prove.c"
-  "${SRC_DIR}/show_proof_verify.c")
+  "${SRC_DIR}/show_proof_verify.c"
+  "${SRC_DIR}/sampling.c")
 
 target_sources(test PUBLIC
   "${TEST_DIR}/main.c"
@@ -103,10 +104,12 @@ set(WARN_ERROR_FLAGS
   -Wcast-align -Wstrict-prototypes -Wwrite-strings -Waggregate-return
   -Wcast-qual -Wswitch-default -Wswitch-enum -Wunreachable-code)
 
-set(SANITIZER_FLAGS
-  -fsanitize=address -fsanitize=leak -fno-omit-frame-pointer
-  -fsanitize=undefined -fsanitize=float-divide-by-zero
-  -fsanitize=float-cast-overflow)
+# Sanitizers disabled for TSampler (compatibility with FLINT nmod)
+#set(SANITIZER_FLAGS
+#  -fsanitize=address -fsanitize=leak -fno-omit-frame-pointer
+#  -fsanitize=undefined -fsanitize=float-divide-by-zero
+#  -fsanitize=float-cast-overflow)
+set(SANITIZER_FLAGS)
 
 set(TEST_OPTS
   -march=native

@@ -5,21 +5,23 @@
 #include "params.h"
 #include "arith.h"
 
+/* TSampler key types */
 typedef struct {
-  poly_q_mat_d_d R[2][PARAM_K];
+  poly_q_mat_d_d R[2][PARAM_KH];
   poly_real_mat_2d_2d S;
 } sep_sk_t;
 
 typedef struct {
-  poly_q_mat_d_d B[PARAM_K];
+  poly_q_mat_d_d B[PARAM_KH];
   uint8_t seed[SEED_BYTES];
 } sep_pk_t;
 
+/* TSampler signature: tag + v12 + v2[KH] + v3(scalar) */
 typedef struct {
   poly_q tag;
   poly_q_vec_d v12;
-  poly_q_vec_d v2[PARAM_K];
-  poly_q_vec_k v3;
+  poly_q_vec_d v2[PARAM_KH];
+  poly_q v3;                    /* scalar polynomial */
 } sep_sig_t;
 
 void sep_keys_init(sep_pk_t *pk, sep_sk_t *sk);

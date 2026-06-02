@@ -222,6 +222,8 @@ void poly_q_vec_d_bin_uniform(poly_q_vec_d vec, const uint8_t seed[SEED_BYTES], 
   }
 }
 
+#if PARAM_K == 5  /* OLD SEP Klein sampler — disabled for TSampler */
+
 /*************************************************
 * Name:        poly_q_vec_2d_dk_sample_perturb
 *
@@ -453,6 +455,8 @@ void poly_q_vec_2d_dk_sample_pre(
     poly_q_vec_d_clear(y[i]);
   }
 }
+
+#endif /* PARAM_K == 5 */
 
 /*************************************************
 * Name:        poly_q_binary_fixed_weight

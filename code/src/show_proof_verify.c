@@ -29,7 +29,7 @@ int show_verify(
     const show_proof_t       *proof, 
     const poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D], 
     const poly_qshow_mat_k_k B_embed[PARAM_D][PARAM_D*PARAM_K], 
-    const poly_qshow_mat_k_k A3_embed[PARAM_D][PARAM_K], 
+    const poly_qshow_vec_k A3_embed[PARAM_D], 
     const poly_qshow_mat_k_k Ds_embed[PARAM_D][2*PARAM_D], 
     const poly_qshow_mat_k_k D_embed[PARAM_D][PARAM_M], 
     const poly_qshow_vec_k   u_embed[PARAM_D], 
@@ -266,11 +266,11 @@ int show_verify(
     poly_qshow_mat_k_k_chal_3_embed(chal_3_quad_matrix[i], chal_3_dk[i]);
     for (j = 0; j < PARAM_K_SHOW; j++) {
       poly_qshow_zero(Gz1_v2[i]->entries[j]);
-      bexpi = PARAM_Q1_SHOW;
-      for (k = 0; k < PARAM_K; k++) {
+      bexpi = (int64_t)PARAM_Q1_SHOW * PARAM_QL;
+      for (k = 0; k < PARAM_KH; k++) {
         poly_qshow_mul_scalar(tmp_poly, proof->z1->entries[IDX_V2_SHOW + k*PARAM_D*PARAM_K_SHOW + i*PARAM_K_SHOW + j], bexpi);
         poly_qshow_add(Gz1_v2[i]->entries[j], Gz1_v2[i]->entries[j], tmp_poly);
-        bexpi *= PARAM_B;
+        bexpi *= PARAM_BH;
       }
     }
   }
@@ -348,12 +348,12 @@ int show_verify(
       poly_qshow_mul(tmp_poly, A_embed[i_k_quot][j / PARAM_K_SHOW]->rows[i_k_rem]->entries[j % PARAM_K_SHOW], proof->z1->entries[IDX_V12_SHOW + j]);
       poly_qshow_add(z1s_z1, z1s_z1, tmp_poly);
     }
-    for (j = 0; j < PARAM_D*PARAM_K*PARAM_K_SHOW; j++) {
+    for (j = 0; j < PARAM_D*PARAM_KH*PARAM_K_SHOW; j++) {
       poly_qshow_mul(tmp_poly, B_embed[i_k_quot][j / PARAM_K_SHOW]->rows[i_k_rem]->entries[j % PARAM_K_SHOW], proof->z1->entries[IDX_V2_SHOW + j]);
       poly_qshow_sub(z1s_z1, z1s_z1, tmp_poly); // substraction
     }
     for (j = 0; j < PARAM_K*PARAM_K_SHOW; j++) {
-      poly_qshow_mul(tmp_poly, A3_embed[i_k_quot][j / PARAM_K_SHOW]->rows[i_k_rem]->entries[j % PARAM_K_SHOW], proof->z1->entries[IDX_V3_SHOW + j]);
+      poly_qshow_mul(tmp_poly, A3_embed[i_k_quot]->entries[j], proof->z1->entries[IDX_V3_SHOW + j]);
       poly_qshow_add(z1s_z1, z1s_z1, tmp_poly);
     }
     for (j = 0; j < 2*PARAM_D*PARAM_K_SHOW; j++) {

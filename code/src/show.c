@@ -65,7 +65,7 @@ void show_proof_clear(show_proof_t *proof) {
 void show_user_embed(
     poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D], 
     poly_qshow_mat_k_k B_embed[PARAM_D][PARAM_D*PARAM_K], 
-    poly_qshow_mat_k_k A3_embed[PARAM_D][PARAM_K], 
+    poly_qshow_vec_k A3_embed[PARAM_D], 
     poly_qshow_mat_k_k Ds_embed[PARAM_D][2*PARAM_D], 
     poly_qshow_mat_k_k D_embed[PARAM_D][PARAM_M], 
     poly_qshow_vec_k   u_embed[PARAM_D], 
@@ -80,7 +80,7 @@ void show_user_embed(
   uint64_t norm2sq_v1, norm2sq_v2, norm2sq_v3, four_squares_res[4];
   poly_q tmp_poly;
   poly_q_mat_d_d A, Ds[2], Btmp;
-  poly_q_mat_d_k A3;
+  poly_q_vec_d a3;
   poly_q_mat_d_m D;
   poly_q_vec_d u, v11;
   poly_q_vec_m m;
@@ -90,7 +90,7 @@ void show_user_embed(
   poly_q_init(tmp_poly);
   poly_q_mat_d_d_init(A);
   poly_q_mat_d_d_init(Btmp);
-  poly_q_mat_d_k_init(A3);
+  poly_q_vec_d_init(a3);
   poly_q_mat_d_m_init(D);
   poly_q_mat_d_d_init(Ds[0]);
   poly_q_mat_d_d_init(Ds[1]);
@@ -101,7 +101,7 @@ void show_user_embed(
 
   // expanding uniform public parameters
   poly_q_mat_d_d_uniform(A, pk->seed, DOMAIN_SEPARATOR_A, 0);
-  poly_q_mat_d_k_uniform(A3, pk->seed, DOMAIN_SEPARATOR_A3);
+  poly_q_vec_d_uniform(a3, pk->seed, DOMAIN_SEPARATOR_A3);
   poly_q_mat_d_d_uniform(Ds[0], pk->seed, DOMAIN_SEPARATOR_DS, 0);
   poly_q_mat_d_d_uniform(Ds[1], pk->seed, DOMAIN_SEPARATOR_DS, PARAM_D);
   poly_q_mat_d_m_uniform(D, pk->seed, DOMAIN_SEPARATOR_D);
@@ -120,17 +120,17 @@ void show_user_embed(
   poly_q_mat_d_m_mul_vec_m(v11, D, m);
   poly_q_vec_d_add(v11, v11, u); // u can be used as a temp variable now
   poly_q_vec_d_add(v11, v11, upk->t); // Ds.usk = upk
-  poly_q_mat_d_k_mul_vec_k(u, A3, sig->v3);
+  poly_q_vec_d_mul_poly(u, a3, sig->v3);
   poly_q_mat_d_d_muladd_vec_d(u, A, sig->v12);
   poly_q_vec_d_sub(v11, v11, u);
 
   // now we have v11 = u + Ds.usk + D.m - A.v12 - A3.v3
-  bexpi = 1;
-  for (i = 0; i < PARAM_K; i++) {
+  bexpi = PARAM_QL;
+  for (i = 0; i < PARAM_KH; i++) {
     // copy B to Btmp
     poly_q_mat_d_d_set(Btmp, pk->B[i]);
     for (j = 0; j < PARAM_D; j++) {
-      if (i == 0) {
+      if (0) { /* TSampler: all entries use tag*bH^i */
         poly_q_sub(Btmp->rows[j]->entries[j], Btmp->rows[j]->entries[j], sig->tag);
       } else {
         poly_q_mul_scalar(tmp_poly, sig->tag, bexpi);
@@ -138,7 +138,7 @@ void show_user_embed(
       }
     }
     poly_q_mat_d_d_muladd_vec_d(v11, Btmp, sig->v2[i]);
-    bexpi *= PARAM_B;
+    bexpi *= PARAM_BH;
   }
 
   // computing square norms and four-square decompositions
@@ -146,10 +146,10 @@ void show_user_embed(
   norm2sq_v1 = poly_q_vec_d_norm2(v11);
   norm2sq_v1 += poly_q_vec_d_norm2(sig->v12);
   norm2sq_v2 = poly_q_vec_d_norm2(sig->v2[0]);
-  for (i = 1; i < PARAM_K; i++) {
+  for (i = 1; i < PARAM_KH; i++) {
     norm2sq_v2 += poly_q_vec_d_norm2(sig->v2[i]);
   }
-  norm2sq_v3 = poly_q_vec_k_norm2(sig->v3);
+  norm2sq_v3 = poly_q_sq_norm2(sig->v3);
   // B1^2 - |v1|^2
   assert(norm2sq_v1 <= PARAM_B1SQ);
   four_squares(four_squares_res, PARAM_B1SQ - norm2sq_v1);
@@ -181,19 +181,17 @@ void show_user_embed(
       poly_qshow_set(s1->entries[IDX_V1_SHOW + (i + PARAM_D)*PARAM_K_SHOW + j], tmp_vec_k->entries[j]);
     }
   }
-  // v2
-  for (i = 0; i < PARAM_D*PARAM_K; i++) {
+  // v2 (TSampler: KH entries)
+  for (i = 0; i < PARAM_D*PARAM_KH; i++) {
     poly_qshow_subring_embed_vec_k(tmp_vec_k, sig->v2[i / PARAM_D]->entries[i % PARAM_D], 1);
     for (j = 0; j < PARAM_K_SHOW; j++) {
       poly_qshow_set(s1->entries[IDX_V2_SHOW + i*PARAM_K_SHOW + j], tmp_vec_k->entries[j]);
     }
   }
-  // v3
-  for (i = 0; i < PARAM_K; i++) {
-    poly_qshow_subring_embed_vec_k(tmp_vec_k, sig->v3->entries[i], 1);
-    for (j = 0; j < PARAM_K_SHOW; j++) {
-      poly_qshow_set(s1->entries[IDX_V3_SHOW + i*PARAM_K_SHOW + j], tmp_vec_k->entries[j]);
-    }
+  // v3 (TSampler: scalar poly_q, not vec_k)
+  poly_qshow_subring_embed_vec_k(tmp_vec_k, sig->v3, 1);
+  for (j = 0; j < PARAM_K_SHOW; j++) {
+    poly_qshow_set(s1->entries[IDX_V3_SHOW + j], tmp_vec_k->entries[j]);
   }
   // tag
   poly_qshow_subring_embed_vec_k(tmp_vec_k, sig->tag, 1);
@@ -225,8 +223,8 @@ void show_user_embed(
     for (j = 0; j < PARAM_D*PARAM_K; j++) {
       poly_qshow_subring_embed_mat_k_k(B_embed[i][j], pk->B[j / PARAM_D]->rows[i]->entries[j % PARAM_D], PARAM_Q1_SHOW); // B
     }
-    for (j = 0; j < PARAM_K; j++) {
-      poly_qshow_subring_embed_mat_k_k(A3_embed[i][j], A3->rows[i]->entries[j], PARAM_Q1_SHOW); // A3
+    for (j = 0; j < PARAM_KH; j++) {
+      poly_qshow_subring_embed_vec_k(A3_embed[i], a3->entries[i], PARAM_Q1_SHOW);
     }
     for (j = 0; j < PARAM_M; j++) {
       poly_qshow_subring_embed_mat_k_k(D_embed[i][j], D->rows[i]->entries[j], PARAM_Q1_SHOW); // D
@@ -237,7 +235,7 @@ void show_user_embed(
   poly_q_clear(tmp_poly);
   poly_q_mat_d_d_clear(A);
   poly_q_mat_d_d_clear(Btmp);
-  poly_q_mat_d_k_clear(A3);
+  poly_q_vec_d_clear(a3);
   poly_q_mat_d_m_clear(D);
   poly_q_mat_d_d_clear(Ds[0]);
   poly_q_mat_d_d_clear(Ds[1]);

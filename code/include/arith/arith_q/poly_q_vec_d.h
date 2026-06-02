@@ -26,6 +26,8 @@ void poly_q_vec_d_mul_poly(poly_q_vec_d res, const poly_q_vec_d arg, const poly_
 void poly_q_vec_d_mul_inner(poly_q res, const poly_q_vec_d lhs, const poly_q_vec_d rhs);
 uint64_t poly_q_vec_d_norm2(const poly_q_vec_d arg);
 void poly_q_vec_d_gaussian_sqrt_s2sq_sGsq(poly_q_vec_d res);
+void poly_q_vec_d_gaussian_sqrt_s2sq_sLsq(poly_q_vec_d res);
+void poly_q_vec_d_gaussian_sqrt_s4sq_sHsq(poly_q_vec_d res);
 int poly_q_vec_d_equal(const poly_q_vec_d lhs, const poly_q_vec_d rhs);
 void poly_q_vec_d_dump(const poly_q_vec_d arg);
 

@@ -325,7 +325,7 @@ static void show_user_prove_round4(
     const poly_qshow_vec_m2      b,
     const poly_qshow_mat_k_k     A_embed[PARAM_D][PARAM_D], 
     const poly_qshow_mat_k_k     B_embed[PARAM_D][PARAM_D*PARAM_K], 
-    const poly_qshow_mat_k_k     A3_embed[PARAM_D][PARAM_K], 
+    const poly_qshow_vec_k A3_embed[PARAM_D],
     const poly_qshow_mat_k_k     Ds_embed[PARAM_D][2*PARAM_D], 
     const poly_qshow_mat_k_k     D_embed[PARAM_D][PARAM_M], 
     const poly_qshow_vec_256     sum_gamma_e_star[PARAM_L_SHOW],
@@ -490,18 +490,18 @@ static void show_user_prove_round4(
     poly_qshow_add(e1, e1, y1s_y1);
   }
   
-  // quadratic part depending on chal_3_quad_matrix
+  // quadratic part depending on chal_3_quad_matrix (TSampler: KH entries, qL*bH^i scaling)
   for (i = 0; i < PARAM_D; i++) {
     for (j = 0; j < PARAM_K_SHOW; j++) {
       poly_qshow_zero(Gy1_v2[i]->entries[j]);
       poly_qshow_zero(Gs1_v2[i]->entries[j]);
-      bexpi = PARAM_Q1_SHOW;
-      for (k = 0; k < PARAM_K; k++) {
+      bexpi = (int64_t)PARAM_Q1_SHOW * PARAM_QL;
+      for (k = 0; k < PARAM_KH; k++) {
         poly_qshow_mul_scalar(tmp_poly, y1->entries[IDX_V2_SHOW + k*PARAM_D*PARAM_K_SHOW + i*PARAM_K_SHOW + j], bexpi);
         poly_qshow_add(Gy1_v2[i]->entries[j], Gy1_v2[i]->entries[j], tmp_poly);
         poly_qshow_mul_scalar(tmp_poly, s1->entries[IDX_V2_SHOW + k*PARAM_D*PARAM_K_SHOW + i*PARAM_K_SHOW + j], bexpi);
         poly_qshow_add(Gs1_v2[i]->entries[j], Gs1_v2[i]->entries[j], tmp_poly);
-        bexpi *= PARAM_B;
+        bexpi *= PARAM_BH;
       }
     }
   }
@@ -536,12 +536,12 @@ static void show_user_prove_round4(
       poly_qshow_mul(tmp_poly, A_embed[i_k_quot][j / PARAM_K_SHOW]->rows[i_k_rem]->entries[j % PARAM_K_SHOW], y1->entries[IDX_V12_SHOW + j]);
       poly_qshow_add(y1s_y1, y1s_y1, tmp_poly);
     }
-    for (j = 0; j < PARAM_D*PARAM_K*PARAM_K_SHOW; j++) {
+    for (j = 0; j < PARAM_D*PARAM_KH*PARAM_K_SHOW; j++) {
       poly_qshow_mul(tmp_poly, B_embed[i_k_quot][j / PARAM_K_SHOW]->rows[i_k_rem]->entries[j % PARAM_K_SHOW], y1->entries[IDX_V2_SHOW + j]);
       poly_qshow_sub(y1s_y1, y1s_y1, tmp_poly); // substraction
     }
-    for (j = 0; j < PARAM_K*PARAM_K_SHOW; j++) {
-      poly_qshow_mul(tmp_poly, A3_embed[i_k_quot][j / PARAM_K_SHOW]->rows[i_k_rem]->entries[j % PARAM_K_SHOW], y1->entries[IDX_V3_SHOW + j]);
+    for (j = 0; j < PARAM_K_SHOW; j++) {
+      poly_qshow_mul(tmp_poly, A3_embed[i_k_quot]->entries[j], y1->entries[IDX_V3_SHOW + j]);
       poly_qshow_add(y1s_y1, y1s_y1, tmp_poly);
     }
     for (j = 0; j < 2*PARAM_D*PARAM_K_SHOW; j++) {
@@ -662,7 +662,7 @@ void show_user_prove(
     show_proof_t             *proof, 
     const poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D], 
     const poly_qshow_mat_k_k B_embed[PARAM_D][PARAM_D*PARAM_K], 
-    const poly_qshow_mat_k_k A3_embed[PARAM_D][PARAM_K], 
+    const poly_qshow_vec_k A3_embed[PARAM_D], 
     const poly_qshow_mat_k_k Ds_embed[PARAM_D][2*PARAM_D], 
     const poly_qshow_mat_k_k D_embed[PARAM_D][PARAM_M], 
     const poly_qshow_vec_m1  s1, 

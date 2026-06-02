@@ -246,6 +246,26 @@ void poly_q_vec_d_gaussian_sqrt_s2sq_sGsq(poly_q_vec_d res) {
   }
 }
 
+void poly_q_vec_d_gaussian_sqrt_s2sq_sLsq(poly_q_vec_d res) {
+  coeff_q cj;
+  for (size_t i = 0; i < PARAM_D; i++) {
+    for (size_t j = 0; j < PARAM_N; j++) {
+      cj = SampleZ(0, PARAM_SQRT_S2SQ_SLSQ);
+      poly_q_set_coeff(res->entries[i], j, cj);
+    }
+  }
+}
+
+void poly_q_vec_d_gaussian_sqrt_s4sq_sHsq(poly_q_vec_d res) {
+  coeff_q cj;
+  for (size_t i = 0; i < PARAM_D; i++) {
+    for (size_t j = 0; j < PARAM_N; j++) {
+      cj = SampleZ(0, PARAM_SQRT_S4SQ_SHSQ);
+      poly_q_set_coeff(res->entries[i], j, cj);
+    }
+  }
+}
+
 /*************************************************
 * Name:        poly_q_vec_d_equal
 *

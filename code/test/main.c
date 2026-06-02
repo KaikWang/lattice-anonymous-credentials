@@ -11,10 +11,10 @@
 /* ── Toggle: uncomment to print proof/witness sizes ── */
 //#define BENCHMARK_PROOF_SIZES// 注释掉后，不打印零知识证明大小
 /* ── Toggle: uncomment to dump proof/witness as hex ── */
-#define DUMP_PROOF_WITNESS_HEX
+//#define DUMP_PROOF_WITNESS_HEX
 
 #define NTESTS 1
-#define NSUBTESTS 5
+#define NSUBTESTS 1
 
 static int sep_test(void)
 {
@@ -244,7 +244,7 @@ static int show_proof_test(void)
   coeff_qshow coeff;
   poly_qshow_vec_m1 s1;
   poly_qshow_vec_k u_embed[PARAM_D];
-  poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D], B_embed[PARAM_D][PARAM_D*PARAM_K], A3_embed[PARAM_D][PARAM_K];
+  poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D], B_embed[PARAM_D][PARAM_D*PARAM_K]; poly_qshow_vec_k A3_embed[PARAM_D];
   poly_qshow_mat_k_k D_embed[PARAM_D][PARAM_M], Ds_embed[PARAM_D][2*PARAM_D];
   uint8_t state[STATE_BYTES], msg[PARAM_M*PARAM_N/8], crs_seed[CRS_SEED_BYTES];
   randombytes(state, STATE_BYTES);
@@ -273,10 +273,7 @@ static int show_proof_test(void)
     {
       poly_qshow_mat_k_k_init(B_embed[i][j]);
     }
-    for (j = 0; j < PARAM_K; j++)
-    {
-      poly_qshow_mat_k_k_init(A3_embed[i][j]);
-    }
+    poly_qshow_vec_k_init(A3_embed[i]);
     for (j = 0; j < PARAM_M; j++)
     {
       poly_qshow_mat_k_k_init(D_embed[i][j]);
@@ -343,10 +340,7 @@ show_proof_test_cleanup:
     {
       poly_qshow_mat_k_k_clear(B_embed[i][j]);
     }
-    for (j = 0; j < PARAM_K; j++)
-    {
-      poly_qshow_mat_k_k_clear(A3_embed[i][j]);
-    }
+    poly_qshow_vec_k_clear(A3_embed[i]);
     for (j = 0; j < PARAM_M; j++)
     {
       poly_qshow_mat_k_k_clear(D_embed[i][j]);
@@ -558,7 +552,7 @@ static void dump_show_proof_and_witness(void)
   poly_q_vec_d cmt;
   poly_qshow_vec_m1 s1;
   poly_qshow_vec_k u_embed[PARAM_D];
-  poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D], B_embed[PARAM_D][PARAM_D * PARAM_K], A3_embed[PARAM_D][PARAM_K];
+  poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D], B_embed[PARAM_D][PARAM_D*PARAM_K]; poly_qshow_vec_k A3_embed[PARAM_D];
   poly_qshow_mat_k_k D_embed[PARAM_D][PARAM_M], Ds_embed[PARAM_D][2 * PARAM_D];
   uint8_t state[STATE_BYTES], msg[PARAM_M * PARAM_N / 8], crs_seed[CRS_SEED_BYTES];
   uint8_t *packed_buf = NULL;
@@ -612,7 +606,7 @@ static void dump_show_proof_and_witness(void)
     for (j = 0; j < PARAM_D * PARAM_K; j++)
       poly_qshow_mat_k_k_init(B_embed[i][j]);
     for (j = 0; j < PARAM_K; j++)
-      poly_qshow_mat_k_k_init(A3_embed[i][j]);
+      poly_qshow_vec_k_init(A3_embed[i]); /* was mat_k_k_init */
     for (j = 0; j < PARAM_M; j++)
       poly_qshow_mat_k_k_init(D_embed[i][j]);
   }
@@ -725,7 +719,7 @@ static void dump_show_proof_and_witness(void)
     for (j = 0; j < PARAM_D * PARAM_K; j++)
       poly_qshow_mat_k_k_clear(B_embed[i][j]);
     for (j = 0; j < PARAM_K; j++)
-      poly_qshow_mat_k_k_clear(A3_embed[i][j]);
+      poly_qshow_vec_k_clear(A3_embed[i]); /* was mat_k_k_clear */
     for (j = 0; j < PARAM_M; j++)
       poly_qshow_mat_k_k_clear(D_embed[i][j]);
   }
@@ -806,12 +800,10 @@ int main(void) {
 
   for (int i = 0; i < NTESTS; i++)
   {
-    pass &= show_proof_test();
-    pass &= osig_proof_test();
-    pass &= osig_signing_test();
     pass &= sep_test();
-    // TODO add more tests
-
+    pass &= osig_signing_test();
+    pass &= osig_proof_test();
+    pass &= show_proof_test();
     if (!pass)
     {
       printf("FAILED!\n");

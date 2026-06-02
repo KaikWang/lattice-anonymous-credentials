@@ -148,7 +148,7 @@ int main(void) {
     poly_qshow_vec_m1 s1;
     poly_qshow_vec_k  u_embed[PARAM_D];
     poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D], B_embed[PARAM_D][PARAM_D*PARAM_K];
-    poly_qshow_mat_k_k A3_embed[PARAM_D][PARAM_K], D_embed[PARAM_D][PARAM_M], Ds_embed[PARAM_D][2*PARAM_D];
+    poly_qshow_vec_k A3_embed[PARAM_D], D_embed[PARAM_D][PARAM_M], Ds_embed[PARAM_D][2*PARAM_D];
     uint8_t state[STATE_BYTES], msg[PARAM_M*PARAM_N/8], crs_seed[CRS_SEED_BYTES];
 
     sep_keys_init(&pk, &sk); user_keys_init(&upk, &usk);
@@ -163,7 +163,7 @@ int main(void) {
             poly_qshow_mat_k_k_init(Ds_embed[i][j + PARAM_D]);
         }
         for (int j = 0; j < PARAM_D*PARAM_K; j++) poly_qshow_mat_k_k_init(B_embed[i][j]);
-        for (int j = 0; j < PARAM_K; j++)       poly_qshow_mat_k_k_init(A3_embed[i][j]);
+        poly_qshow_vec_k_init(A3_embed[i]);
         for (int j = 0; j < PARAM_M; j++)       poly_qshow_mat_k_k_init(D_embed[i][j]);
     }
 
@@ -358,7 +358,7 @@ cleanup:
             poly_qshow_mat_k_k_clear(Ds_embed[i][j + PARAM_D]);
         }
         for (int j = 0; j < PARAM_D*PARAM_K; j++) poly_qshow_mat_k_k_clear(B_embed[i][j]);
-        for (int j = 0; j < PARAM_K; j++)       poly_qshow_mat_k_k_clear(A3_embed[i][j]);
+        poly_qshow_vec_k_clear(A3_embed[i]);
         for (int j = 0; j < PARAM_M; j++)       poly_qshow_mat_k_k_clear(D_embed[i][j]);
     }
     arith_teardown();

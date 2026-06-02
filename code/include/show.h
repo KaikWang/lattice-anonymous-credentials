@@ -20,15 +20,17 @@
 #define IDX_V1_SHOW 0
 // Starting index for v12 in s1
 #define IDX_V12_SHOW (IDX_V1_SHOW + PARAM_D*PARAM_K_SHOW)
-// Starting index for v2 in s1
+// Starting index for v2 in s1 (TSampler: KH vec_d entries)
+#define V2_SHOW_POLYS (PARAM_D*PARAM_KH*PARAM_K_SHOW)
 #define IDX_V2_SHOW (IDX_V12_SHOW + PARAM_D*PARAM_K_SHOW + 1) // +1 for four squares polynomial
-// Starting index for v3 in s1 
-#define IDX_V3_SHOW (IDX_V2_SHOW + PARAM_D*PARAM_K*PARAM_K_SHOW + 1) // +1 for four squares polynomial
-// Starting index for tag in s1 
-#define IDX_TAG_SHOW (IDX_V3_SHOW + PARAM_K*PARAM_K_SHOW + 1) // +1 for four squares polynomial
-// Starting index for usk in s1 
+// Starting index for v3 in s1 (TSampler: scalar poly_q → PARAM_K_SHOW polys)
+#define V3_SHOW_POLYS (PARAM_K_SHOW)
+#define IDX_V3_SHOW (IDX_V2_SHOW + V2_SHOW_POLYS + 1) // +1 for four squares polynomial
+// Starting index for tag in s1
+#define IDX_TAG_SHOW (IDX_V3_SHOW + V3_SHOW_POLYS + 1) // +1 for four squares polynomial
+// Starting index for usk in s1
 #define IDX_USK_SHOW (IDX_TAG_SHOW + PARAM_K_SHOW)
-// Starting index for m in s1 
+// Starting index for m in s1
 #define IDX_M_SHOW (IDX_USK_SHOW + 2*PARAM_D*PARAM_K_SHOW)
 
 typedef struct {
@@ -49,7 +51,7 @@ void show_proof_clear(show_proof_t *proof);
 void show_user_embed(
     poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D], 
     poly_qshow_mat_k_k B_embed[PARAM_D][PARAM_D*PARAM_K], 
-    poly_qshow_mat_k_k A3_embed[PARAM_D][PARAM_K], 
+    poly_qshow_vec_k A3_embed[PARAM_D], 
     poly_qshow_mat_k_k Ds_embed[PARAM_D][2*PARAM_D], 
     poly_qshow_mat_k_k D_embed[PARAM_D][PARAM_M], 
     poly_qshow_vec_k   u_embed[PARAM_D], 
@@ -63,7 +65,7 @@ void show_user_prove(
     show_proof_t             *proof, 
     const poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D], 
     const poly_qshow_mat_k_k B_embed[PARAM_D][PARAM_D*PARAM_K], 
-    const poly_qshow_mat_k_k A3_embed[PARAM_D][PARAM_K], 
+    const poly_qshow_vec_k A3_embed[PARAM_D], 
     const poly_qshow_mat_k_k Ds_embed[PARAM_D][2*PARAM_D], 
     const poly_qshow_mat_k_k D_embed[PARAM_D][PARAM_M], 
     const poly_qshow_vec_m1  s1, 
@@ -73,7 +75,7 @@ int show_verify(
     const show_proof_t       *proof, 
     const poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D], 
     const poly_qshow_mat_k_k B_embed[PARAM_D][PARAM_D*PARAM_K], 
-    const poly_qshow_mat_k_k A3_embed[PARAM_D][PARAM_K], 
+    const poly_qshow_vec_k A3_embed[PARAM_D], 
     const poly_qshow_mat_k_k Ds_embed[PARAM_D][2*PARAM_D], 
     const poly_qshow_mat_k_k D_embed[PARAM_D][PARAM_M], 
     const poly_qshow_vec_k   u_embed[PARAM_D], 

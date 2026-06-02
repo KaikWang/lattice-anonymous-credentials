@@ -3,6 +3,7 @@
 
 static nmod_poly_t POLY_F;
 static nmod_poly_t POLY_F_REV_INV;
+static nmod_poly_t POLY_F_MOD_BH;
 
 static poly_q TMP;
 static poly_q AUX;
@@ -60,6 +61,11 @@ void arith_q_setup(void) {
 
   poly_q_init(TMP);
   poly_q_init(AUX);
+
+  /* TSampler: init x^n+1 modulo b_H */
+  nmod_poly_init(POLY_F_MOD_BH, PARAM_BH);
+  nmod_poly_set_coeff_ui(POLY_F_MOD_BH, 0, 1);
+  nmod_poly_set_coeff_ui(POLY_F_MOD_BH, PARAM_N, 1);
 }
 
 /*************************************************
@@ -76,6 +82,7 @@ void arith_q_teardown(void) {
 
   nmod_poly_clear(POLY_F);
   nmod_poly_clear(POLY_F_REV_INV);
+  nmod_poly_clear(POLY_F_MOD_BH);
 }
 
 /*************************************************
@@ -400,4 +407,105 @@ int64_t poly_q_weight(const poly_q arg) {
 void poly_q_invert(poly_q res, const poly_q arg) {
   nmod_poly_xgcd(TMP, AUX, res, POLY_F, arg);
   ASSERT_DEBUG(nmod_poly_is_one(TMP), "Polynomial inversion did not work correctly.");
+}
+
+/*************************************************
+ * TSampler additions below
+ *************************************************/
+
+void poly_q_mod_bL(poly_q res, const poly_q arg) {
+  for (size_t j = 0; j < PARAM_N; ++j) {
+    coeff_q c = poly_q_get_coeff(arg, j);
+    c %= PARAM_BL;
+    c += (c >> (sizeof(coeff_q)*8-1)) & PARAM_BL;
+    ASSERT_DEBUG(c >= 0, "Don't give me too much negativity!");
+    nmod_poly_set_coeff_ui(res, j, c);
+  }
+}
+
+void poly_q_mod_bH(poly_q res, const poly_q arg) {
+  for (size_t j = 0; j < PARAM_N; ++j) {
+    coeff_q c = poly_q_get_coeff(arg, j);
+    c %= PARAM_BH;
+    c += (c >> (sizeof(coeff_q)*8-1)) & PARAM_BH;
+    ASSERT_DEBUG(c >= 0, "Don't give me too much negativity!");
+    nmod_poly_set_coeff_ui(res, j, c);
+  }
+}
+
+void poly_q_div_bL(poly_q res, const poly_q arg) {
+  coeff_q c;
+  for (size_t i = 0; i < PARAM_N; i++) {
+    c = poly_q_get_coeff(arg, i);
+    c /= PARAM_BL;
+    poly_q_set_coeff(res, i, c);
+  }
+}
+
+void poly_q_div_bH(poly_q res, const poly_q arg) {
+  coeff_q c;
+  for (size_t i = 0; i < PARAM_N; i++) {
+    c = poly_q_get_coeff(arg, i);
+    c /= PARAM_BH;
+    poly_q_set_coeff(res, i, c);
+  }
+}
+
+void poly_q_gaussian_coset_sL(poly_q res, const poly_q arg) {
+  coeff_q c,z;
+  double neg_c_div_bL;
+  for (size_t i = 0; i < PARAM_N; i++) {
+    c = poly_q_get_coeff(arg, i);
+    neg_c_div_bL = - ((double)c) / PARAM_BL;
+    z = SampleZ(neg_c_div_bL, PARAM_SL_DIV_BL);
+    c += (PARAM_BL * z);
+    poly_q_set_coeff(res, i, c);
+  }
+}
+
+void poly_q_gaussian_coset_sH(poly_q res, const poly_q arg) {
+  coeff_q c,z;
+  double neg_c_div_bH;
+  for (size_t i = 0; i < PARAM_N; i++) {
+    c = poly_q_get_coeff(arg, i);
+    neg_c_div_bH = - ((double)c) / PARAM_BH;
+    z = SampleZ(neg_c_div_bH, PARAM_SH_DIV_BH);
+    c += (PARAM_BH * z);
+    poly_q_set_coeff(res, i, c);
+  }
+}
+
+void poly_q_sample_gaussian_s4(poly_q res) {
+  coeff_q ci;
+  for (size_t i = 0; i < PARAM_N; i++) {
+    ci = SampleZ(0, PARAM_S4);
+    poly_q_set_coeff(res, i, ci);
+  }
+}
+
+void poly_q_invert_mod_bH(poly_q res, const poly_q arg) {
+  nmod_poly_t arg_bH, res_bH;
+  nmod_poly_init(arg_bH, PARAM_BH);
+  nmod_poly_init(res_bH, PARAM_BH);
+  coeff_q c;
+  for (size_t j = 0; j < PARAM_N; j++) {
+    c = poly_q_get_coeff(arg,j);
+    c %= PARAM_BH;
+    c += (c >> (sizeof(coeff_q)*8-1)) & PARAM_BH;
+    ASSERT_DEBUG(c >= 0, "Don't give me too much negativity!");
+    nmod_poly_set_coeff_ui(arg_bH, j, c);
+  }
+  nmod_poly_t tmp_bH, aux_bH;
+  nmod_poly_init(tmp_bH, PARAM_BH);
+  nmod_poly_init(aux_bH, PARAM_BH);
+  nmod_poly_xgcd(tmp_bH, aux_bH, res_bH, POLY_F_MOD_BH, arg_bH);
+  ASSERT_DEBUG(nmod_poly_is_one(tmp_bH), "Polynomial inversion did not work correctly.");
+  for (size_t j = 0; j < PARAM_N; j++) {
+    c = nmod_poly_get_coeff_ui(res_bH, j);
+    poly_q_set_coeff(res,j,c);
+  }
+  nmod_poly_clear(tmp_bH);
+  nmod_poly_clear(aux_bH);
+  nmod_poly_clear(arg_bH);
+  nmod_poly_clear(res_bH);
 }

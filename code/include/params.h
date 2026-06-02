@@ -2,15 +2,17 @@
 #define PARAMS_H
 
 /*************************************************
-* Domain separators for XOF expansion
+* TSampler Signature parameters
+* Based on tag-friendly_sampler s4.1 standard model
 **************************************************/
-// sep
+
+/* Domain separators for XOF — TSampler signature */
 #define DOMAIN_SEPARATOR_A 0
 #define DOMAIN_SEPARATOR_R 1
 #define DOMAIN_SEPARATOR_A3 2
 #define DOMAIN_SEPARATOR_U 3
 #define DOMAIN_SEPARATOR_D 4
-// osig
+/* osig issuance */
 #define DOMAIN_SEPARATOR_DS 5
 #define DOMAIN_SEPARATOR_S 6
 #define DOMAIN_SEPARATOR_RAND 7
@@ -24,7 +26,7 @@
 #define DOMAIN_SEPARATOR_CHAL4_ISS 15
 #define DOMAIN_SEPARATOR_RAND_S2_ISS 16
 #define DOMAIN_SEPARATOR_RAND_G_ISS 17
-// show
+/* show */
 #define DOMAIN_SEPARATOR_A1_SHOW 18
 #define DOMAIN_SEPARATOR_A2_SHOW 19
 #define DOMAIN_SEPARATOR_BYG_SHOW 20
@@ -36,200 +38,134 @@
 #define DOMAIN_SEPARATOR_RAND_S2_SHOW 26
 #define DOMAIN_SEPARATOR_RAND_G_SHOW 27
 
-/*************************************************
-* Signature parameters
-**************************************************/
-// Ring degree for the signature
+/* Signature parameters */
 #define PARAM_N 256
-// Modulus for the signature
-#define PARAM_Q 425801L
-// Modulus bit-length upper bound for uniform sampling
-#define PARAM_Q_BITLEN 20
-// Module rank for the signature
+#define PARAM_Q 405769L        /* q_L * q_H = 2401 * 169 */
+#define PARAM_QL 2401L         /* b_L^k_L = 49^2 */
+#define PARAM_QH 169L          /* b_H^k_H = 13^2 */
+#define PARAM_Q_BITLEN 19
 #define PARAM_D 4
-// Gadget dimension
-#define PARAM_K 5
-// Gadget base
-#define PARAM_B 14
-// Dimension of the message vector (without usk)
+#define PARAM_KH 2             /* G_H dimension */
+#define PARAM_KL 2             /* G_L dimension */
+#define PARAM_BH 13            /* G_H base */
+#define PARAM_BL 49            /* G_L base */
+/* keep PARAM_K for backward compat with proof layer */
+#define PARAM_K PARAM_KH
+#define PARAM_B PARAM_BL  /* compat: old SEP gadget base */
 #define PARAM_M 10
-// Number of iterations for the spectral norm estimation
-#define PARAM_IT_SPEC_NORM 5
-// Hamming weight of the tags
+#define PARAM_IT_SPEC_NORM 6
 #define PARAM_W 5
-// Bound on the square spectral norm of R
-#define PARAM_R_MAX_SQ_SPECTRAL_NORM 7390.20585207465319399489
-// Gaussian parameter s_2 for v_2 and v_3
-#define PARAM_S2 68.17015305110869860528
-// Squared Gaussian parameter s_1^2
-#define PARAM_S1SQ 34270592.82034289091825485229
-// Gaussian width for p_2
-#define PARAM_SQRT_S2SQ_SGSQ 48.26510947391209782609
-// Negated ratio -1/(1/s_G^2 - 1/s_2^2)
-#define PARAM_SGINVSQ_S2INVSQ -4623.48663266090716206236
-// Negated ratio -s_G^2/(s_2^2 - s_G^2)
-#define PARAM_NEGSGSQ_DIV_S2SQ_SGSQ -0.99490375098435301915
-// Squared verification bound on v_1 (hiding case)
-#define PARAM_B1SQ 16568582601UL
-// Squared verification bound on v_2
-#define PARAM_B2SQ 4886925UL
-// Squared verification bound on v_3
-#define PARAM_B3SQ 1544265UL
+#define PARAM_R_MAX_SQ_SPECTRAL_NORM 3898.89415332639373446000
 
-// Length of the public and secret seeds
+/* Gaussian parameters */
+#define PARAM_S1SQ_SLSQ 22816850.56626987829804420471
+#define PARAM_S3SQ 22816838.86761695519089698792
+#define PARAM_S4 76.49922142570575545051
+#define PARAM_SL_DIV_BL 3.38718927843394679300
+#define PARAM_SH_DIV_BH 3.38718927843394679300
+#define PARAM_SQRT_S2SQ_SLSQ 3.42032935794184789202
+#define PARAM_SQRT_S4SQ_SHSQ 62.55545719277940008851
+
+/* Schur complement constants */
+#define PARAM_NEG_SHSQS4SQ_DIV_S4SQ_SHSQ -2899.67458311796281122952
+#define PARAM_NEG_SHSQ_DIV_S4SQ_SHSQ -0.49549038516081478356
+
+/* Old SEP compat — map to new names where needed */
+#define PARAM_S1SQ (PARAM_S1SQ_SLSQ + 2*PARAM_S3SQ) /* approximate compat */
+#define PARAM_S2 3.42
+#define PARAM_SQRT_S2SQ_SGSQ PARAM_SQRT_S2SQ_SLSQ
+#define PARAM_SGINVSQ_S2INVSQ 1.0
+#define PARAM_NEGSGSQ_DIV_S2SQ_SGSQ -0.5
+
+/* Verification bounds */
+#define PARAM_B11SQ 18149347086L
+#define PARAM_B12SQ 4652284329L
+#define PARAM_B2SQ 2238819L
+#define PARAM_B3SQ 367252L
+
+/* compat: map SEP names to TSampler names */
+#define PARAM_B1SQ PARAM_B11SQ
+#define PARAM_B1SQ_HIDING PARAM_B11SQ
+
+/* Seeds */
 #define SEED_BYTES 32
-// Length of the public seed for CRS expansion
 #define CRS_SEED_BYTES 32
-// Length of the state
 #define STATE_BYTES 64
 
 /*************************************************
-* [ISSUANCE] Zero-Knowledge proof parameters
+* Placeholder AC proof params (reused from SEP)
+* These need to be recomputed for TSampler.
 **************************************************/
-// Ring degree for the issuance proof
 #define PARAM_N_ISS 64
-// Ring degree gap between the issuance proof and the signature (subring embedding)
 #define PARAM_K_ISS 4
-// Modulus for the issuance proof
-#define PARAM_Q_ISS 223205310001L
-// Modulus bit-length upper bound for uniform sampling
+#define PARAM_Q_ISS 212704515569L
 #define PARAM_Q_ISS_BITLEN 38
-// Modulus factor for the issuance proof
 #define PARAM_Q1_ISS 524201L
-// Modulus bit-length upper bound for uniform sampling mod q_1
-#define PARAM_Q1_ISS_BITLEN 20
-// Second modulus factor for the issuance proof
+#define PARAM_Q1_ISS_BITLEN 19
 #define PARAM_Q2_ISS PARAM_Q
-// Inverse of q_1 modulo q_2
-#define PARAM_Q1_INVMOD_Q2_ISS 343579L
-// Inverse of q_2 modulo q_1
-#define PARAM_Q2_INVMOD_Q1_ISS 101223L
-// Module rank for the issuance proof
+#define PARAM_Q1_INVMOD_Q2_ISS 85651L
+#define PARAM_Q2_INVMOD_Q1_ISS 413551L
 #define PARAM_D_ISS 20
-// Witness dimension
 #define PARAM_M1_ISS 104
-// Scaled witness dimension (m_1 / k_hat)
 #define PARAM_M1_K_ISS 26
-// ABDLOP commitment randomness dimension
 #define PARAM_M2_ISS 58
-// Soundness amplification dimension
 #define PARAM_L_ISS 7
-// Dimension for Approximate Range Proof
 #define PARAM_ARP_ISS 256
-// Rank for Approximate Range Proof (256 / n)
 #define PARAM_ARP_DIV_N_ISS 4
-// 256 / n + l
 #define PARAM_ARP_DIV_N_L_ISS 11
-// Gaussian mask width for cs_1
 #define PARAM_S1_ISS 369050.89730269293067976832
-// Squared Gaussian mask width for cs_1
 #define PARAM_S1SQ_ISS 136198564799.92280578613281250000
-// Gaussian mask width for cs_2
 #define PARAM_S2_ISS 275602.77920886297943070531
-// Squared Gaussian mask width for cs_2
 #define PARAM_S2SQ_ISS 75956891907.64927673339843750000
-// Gaussian mask width for Rs_1 (ARP)
 #define PARAM_S3_ISS 72848.10643310110026504844
-// Squared Gaussian mask width for Rs_1 (ARP)
 #define PARAM_S3SQ_ISS 5306846610.88842582702636718750
-// Rejection sampling rate for y_1
 #define PARAM_REJ1_ISS 2
-// Rejection sampling rate for y_2
 #define PARAM_REJ2_ISS 2
-// Rejection sampling rate for y_3
 #define PARAM_REJ3_ISS 2
-// Squared verification bound for z_1
 #define PARAM_B1SQ_ISS 180657566352359UL
-// Squared verification bound for z_2
 #define PARAM_B2SQ_ISS 60411097594469UL
-// Squared verification bound for z_3
 #define PARAM_B3SQ_ISS 584702794673UL
-// Infinity norm of challenges
 #define PARAM_RHO_ISS 8
-// Manhattan-like norm of challenges
 #define PARAM_ETA_ISS 93
 
-/*************************************************
-* [SHOW] Zero-Knowledge proof parameters
-**************************************************/
-// Ring degree for the show proof
 #define PARAM_N_SHOW 64
-// Ring degree gap between the issuance proof and the signature (subring embedding)
 #define PARAM_K_SHOW 4
-// Modulus for the issuance proof
-#define PARAM_Q_SHOW 234086575306343681L
-// Modulus bit-length upper bound for uniform sampling
+#define PARAM_Q_SHOW 223073866842679489L
 #define PARAM_Q_SHOW_BITLEN 58
-// Modulus factor for the show proof
 #define PARAM_Q1_SHOW 549755813881L
-// Modulus bit-length upper bound for uniform sampling mod q_1
-#define PARAM_Q1_SHOW_BITLEN 40
-// Second modulus factor for the issuance proof
+#define PARAM_Q1_SHOW_BITLEN 39
 #define PARAM_Q2_SHOW PARAM_Q
-// Inverse of q_1 modulo q_2
-#define PARAM_Q1_INVMOD_Q2_SHOW 99299L
-// Inverse of q_2 modulo q_1
-#define PARAM_Q2_INVMOD_Q1_SHOW 421549908863L
-// Module rank for the show proof
+#define PARAM_Q1_INVMOD_Q2_SHOW 232961L
+#define PARAM_Q2_INVMOD_Q1_SHOW 234128784321L
 #define PARAM_D_SHOW 23
-// Witness dimension
-#define PARAM_M1_SHOW 211
-// ABDLOP commitment randomness dimension
+#define PARAM_M1_SHOW 179  /* updated for TSampler: v2(KH=2), v3(scalar) */
 #define PARAM_M2_SHOW 74
-// Soundness amplification dimension
 #define PARAM_L_SHOW 7
-// Dimension for Approximate Range Proof
 #define PARAM_ARP_SHOW 256
-// Rank for Approximate Range Proof (256 / n)
 #define PARAM_ARP_DIV_N_SHOW 4
-// 256 / n + l
 #define PARAM_ARP_DIV_N_L_SHOW 11
-// Gaussian mask width for cs_1
 #define PARAM_S1_SHOW 582380223.29294335842132568359
-// Squared Gaussian mask width for cs_1
 #define PARAM_S1SQ_SHOW 339166724482738560.00000000000000000000
-// Gaussian mask width for cs_2
 #define PARAM_S2_SHOW 311304.54102290823357179761
-// Squared Gaussian mask width for cs_2
 #define PARAM_S2SQ_SHOW 96910517261.48355102539062500000
-// Gaussian mask width for Rs_1 (ARP)
 #define PARAM_S3_SHOW 114957846.73890274763107299805
-// Squared Gaussian mask width for Rs_1 (ARP)
 #define PARAM_S3SQ_SHOW 13215306526845054.00000000000000000000
-// Rejection sampling rate for y_1
 #define PARAM_REJ1_SHOW 2
-// Rejection sampling rate for y_2
 #define PARAM_REJ2_SHOW 2
-// Rejection sampling rate for y_3
 #define PARAM_REJ3_SHOW 2
-// Squared verification bound for z_1 (high bits)
 #define PARAM_B1SQ_SHOW_LOW64 6567424658286313472UL
-// Squared verification bound for z_1 (low bits)
 #define PARAM_B1SQ_SHOW_HIGH64 46UL
-// Squared verification bound for z_2
 #define PARAM_B2SQ_SHOW 95184984511325UL
-// Squared verification bound for z_3
 #define PARAM_B3SQ_SHOW 1456048615171063808UL
-// Infinity norm of challenges
 #define PARAM_RHO_SHOW 8
-// Manhattan-like norm of challenges
 #define PARAM_ETA_SHOW 93
 
-/*************************************************
-* Testing
-**************************************************/
-
-// The modulus factor
+/* Testing params */
 #define Q_1_MOD 47
-// The modular inverse of Q_1_MOD mod Q_MIN_MOD (used for CRT reconstruction)
 #define Q_1_MOD_INV 2
-// The smallest modulus factor
 #define Q_MIN_MOD 31
-// The modular inverse of Q_MIN_MOD mod Q_1 (used for CRT reconstruction)
 #define Q_MIN_MOD_INV 44
-// The modulus for the proof system
 #define Q_HAT_MOD (Q_1_MOD * Q_MIN_MOD)
-// The degree of the ring for proofs
 #define N_HAT_RING 4
 
 #endif /* PARAMS_H */

@@ -39,5 +39,13 @@ void poly_q_dump(const poly_q arg);
 uint64_t poly_q_sq_norm2(const poly_q arg);
 int64_t poly_q_weight(const poly_q arg);
 void poly_q_invert(poly_q res, const poly_q arg);
+void poly_q_invert_mod_bH(poly_q res, const poly_q arg);
+void poly_q_mod_bL(poly_q res, const poly_q arg);
+void poly_q_mod_bH(poly_q res, const poly_q arg);
+void poly_q_div_bL(poly_q res, const poly_q arg);
+void poly_q_div_bH(poly_q res, const poly_q arg);
+void poly_q_gaussian_coset_sL(poly_q res, const poly_q arg);
+void poly_q_gaussian_coset_sH(poly_q res, const poly_q arg);
+void poly_q_sample_gaussian_s4(poly_q res);
 
 #endif /* POLY_Q_H */
