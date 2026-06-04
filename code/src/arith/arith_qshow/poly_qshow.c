@@ -221,8 +221,19 @@ void poly_qshow_sub(poly_qshow res, const poly_qshow lhs, const poly_qshow rhs) 
 *              - const poly_qshow rhs: second polynomial factor
 **************************************************/
 void poly_qshow_mul(poly_qshow res, const poly_qshow lhs, const poly_qshow rhs) {
-	ASSERT_DEBUG(nmod_poly_degree(lhs) < PARAM_N_SHOW, "Argument to `poly_qshow_mul` must already be reduced for FLINT.");
-	ASSERT_DEBUG(nmod_poly_degree(rhs) < PARAM_N_SHOW, "Argument to `poly_qshow_mul` must already be reduced for FLINT.");
+	if (nmod_poly_degree(lhs) >= PARAM_N_SHOW || nmod_poly_degree(rhs) >= PARAM_N_SHOW) {
+		poly_qshow lhs_red, rhs_red;
+		poly_qshow_init(lhs_red); poly_qshow_init(rhs_red);
+		if (nmod_poly_degree(lhs) >= PARAM_N_SHOW)
+			nmod_poly_rem(lhs_red, lhs, POLY_F);
+		else nmod_poly_set(lhs_red, lhs);
+		if (nmod_poly_degree(rhs) >= PARAM_N_SHOW)
+			nmod_poly_rem(rhs_red, rhs, POLY_F);
+		else nmod_poly_set(rhs_red, rhs);
+		nmod_poly_mulmod_preinv(res, lhs_red, rhs_red, POLY_F, POLY_F_REV_INV);
+		poly_qshow_clear(lhs_red); poly_qshow_clear(rhs_red);
+		return;
+	}
 	nmod_poly_mulmod_preinv(res, lhs, rhs, POLY_F, POLY_F_REV_INV);
 }
 
@@ -238,8 +249,12 @@ void poly_qshow_mul(poly_qshow res, const poly_qshow lhs, const poly_qshow rhs) 
 **************************************************/
 void poly_qshow_mul_x(poly_qshow res, const poly_qshow arg) {
   nmod_poly_shift_left(res, arg, 1);
-  nmod_poly_set_coeff_ui(res, 0, PARAM_Q_SHOW-nmod_poly_get_coeff_ui(res, PARAM_N_SHOW));
-  nmod_poly_set_coeff_ui(res, PARAM_N_SHOW, 0);
+  {
+    ulong cn = nmod_poly_get_coeff_ui(res, PARAM_N_SHOW);
+    nmod_poly_set_coeff_ui(res, 0, (PARAM_Q_SHOW - cn) % PARAM_Q_SHOW);
+    nmod_poly_set_coeff_ui(res, PARAM_N_SHOW, 0);
+    _nmod_poly_normalise(res);
+  }
 }
 
 /*************************************************
@@ -365,8 +380,16 @@ uint128 poly_qshow_sq_norm2(const poly_qshow arg) {
 **************************************************/
 void poly_qshow_pack(uint8_t buf[POLYQSHOW_PACKEDBYTES], const poly_qshow arg) {
   uint64_t x;
+  /* Ensure polynomial is reduced mod x^N+1 before packing */
+  poly_qshow tmp;
+  poly_qshow_init(tmp);
+  if (nmod_poly_degree(arg) >= PARAM_N_SHOW) {
+    nmod_poly_rem(tmp, arg, POLY_F);
+  } else {
+    nmod_poly_set(tmp, arg);
+  }
   for (size_t i = 0; i < PARAM_N_SHOW; i++) {
-    x = poly_qshow_get_coeff(arg, i);
+    x = nmod_poly_get_coeff_ui(tmp, i);
 #if PARAM_Q_SHOW_BITLEN > 64
 #error "poly_qshow_pack assumes that PARAM_Q_SHOW_BITLEN <= 64"
 #endif
@@ -379,6 +402,7 @@ void poly_qshow_pack(uint8_t buf[POLYQSHOW_PACKEDBYTES], const poly_qshow arg) {
     buf[8*i + 6] = x >> 48;
     buf[8*i + 7] = x >> 56;
   }
+  poly_qshow_clear(tmp);
 }
 
 /*************************************************

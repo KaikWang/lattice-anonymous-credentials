@@ -83,9 +83,12 @@
 #define PARAM_B2SQ 2238819L
 #define PARAM_B3SQ 367252L
 
+/* Hiding bounds for show proof */
+#define PARAM_B11SQ_HIDING 18157970158L
+#define PARAM_B12SQ_HIDING 4656650642L
 /* compat: map SEP names to TSampler names */
-#define PARAM_B1SQ PARAM_B11SQ
-#define PARAM_B1SQ_HIDING PARAM_B11SQ
+#define PARAM_B1SQ (PARAM_B11SQ_HIDING + PARAM_B12SQ_HIDING)
+#define PARAM_B1SQ_HIDING PARAM_B1SQ
 
 /* Seeds */
 #define SEED_BYTES 32

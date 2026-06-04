@@ -20,6 +20,8 @@ void show_proof_init(show_proof_t *proof) {
   poly_qshow_vec_256_l_init(proof->tB);
   poly_qshow_vec_l_init(proof->h);
   poly_qshow_init(proof->t1);
+  poly_qshow_init(proof->t1_gadget);
+  poly_qshow_init(proof->t0_stored);
   poly_qshow_init(proof->c);
   poly_qshow_vec_m2_init(proof->z2);
 }
@@ -38,6 +40,8 @@ void show_proof_clear(show_proof_t *proof) {
   poly_qshow_vec_256_l_clear(proof->tB);
   poly_qshow_vec_l_clear(proof->h);
   poly_qshow_clear(proof->t1);
+  poly_qshow_clear(proof->t1_gadget);
+  poly_qshow_clear(proof->t0_stored);
   poly_qshow_clear(proof->c);
   poly_qshow_vec_m2_clear(proof->z2);
 }

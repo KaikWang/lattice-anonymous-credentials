@@ -39,6 +39,8 @@ typedef struct {
   coeff_qshow z3[PARAM_ARP_SHOW];
   poly_qshow_vec_l h;
   poly_qshow t1;
+  poly_qshow t1_gadget;  /* TSampler gadget quadratic <s1_t, G.s1_v2> */
+  poly_qshow t0_stored;  /* stored t0 = <b,y2> + e0 for challenge verification */
   poly_qshow c;
   uint32_t ctr_c;
   poly_qshow_vec_m1 z1;

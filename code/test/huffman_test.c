@@ -148,7 +148,8 @@ int main(void) {
     poly_qshow_vec_m1 s1;
     poly_qshow_vec_k  u_embed[PARAM_D];
     poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D], B_embed[PARAM_D][PARAM_D*PARAM_K];
-    poly_qshow_vec_k A3_embed[PARAM_D], D_embed[PARAM_D][PARAM_M], Ds_embed[PARAM_D][2*PARAM_D];
+    poly_qshow_vec_k A3_embed[PARAM_D];
+    poly_qshow_mat_k_k D_embed[PARAM_D][PARAM_M], Ds_embed[PARAM_D][2*PARAM_D];
     uint8_t state[STATE_BYTES], msg[PARAM_M*PARAM_N/8], crs_seed[CRS_SEED_BYTES];
 
     sep_keys_init(&pk, &sk); user_keys_init(&upk, &usk);
@@ -169,6 +170,7 @@ int main(void) {
 
     sep_keygen(&pk, &sk);
     osig_user_keygen(&upk, &usk, pk.seed);
+    randombytes(state, STATE_BYTES);
     randombytes(crs_seed, CRS_SEED_BYTES);
     randombytes(msg, PARAM_M*PARAM_N/8);
     osig_user_commit(r, cmt, msg, &upk);

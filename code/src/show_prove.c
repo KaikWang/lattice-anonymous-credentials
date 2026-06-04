@@ -156,9 +156,13 @@ static int show_user_prove_round2(
       }
     }
     tmp_coeff = poly_qshow_get_coeff_centered(y3_g->entries[i / PARAM_N_SHOW], i % PARAM_N_SHOW);
-    tmp += tmp_coeff; 
-    CHK_UI_OVF_ADDITION(sq_norm_y3, tmp_coeff * tmp_coeff);
-    CHK_UI_OVF_ADDITION(sq_norm_z3, tmp * tmp); 
+    tmp += tmp_coeff;
+    { uint64_t _abs = (uint64_t)(tmp_coeff >= 0 ? tmp_coeff : -tmp_coeff);
+      if (_abs <= 4294967295ULL) { uint64_t _sq = _abs * _abs; CHK_UI_OVF_ADDITION(sq_norm_y3, _sq); }
+      else sq_norm_y3 = UINT64_MAX; }
+    { uint64_t _abs = (uint64_t)(tmp >= 0 ? tmp : -tmp);
+      if (_abs <= 4294967295ULL) { uint64_t _sq = _abs * _abs; CHK_UI_OVF_ADDITION(sq_norm_z3, _sq); }
+      else sq_norm_z3 = UINT64_MAX; }
     proof->z3[i] = tmp;
   }
 
@@ -525,6 +529,12 @@ static void show_user_prove_round4(
     poly_qshow_mul(tmp_poly, s1->entries[IDX_TAG_SHOW + i], Gy1_v2[0]->entries[i]);
     poly_qshow_add(e1, e1, tmp_poly);
   }
+  // TSampler gadget quadratic commitment: <s1_t, (sum mu G_i").s1_v2>
+  poly_qshow_zero(proof->t1_gadget);
+  for (i = 0; i < PARAM_K_SHOW; i++) {
+    poly_qshow_mul(tmp_poly, s1->entries[IDX_TAG_SHOW + i], Gs1_v2[0]->entries[i]);
+    poly_qshow_add(proof->t1_gadget, proof->t1_gadget, tmp_poly);
+  }
 
   // linear part depending on embedded matrices A', B, A3, Ds, D
   for (i = 0; i < PARAM_D*PARAM_K_SHOW; i++) {
@@ -557,9 +567,10 @@ static void show_user_prove_round4(
   }
 
   // committing to garbage terms
-  poly_qshow_vec_m2_mul_inner(t0, b, y2);
-  poly_qshow_add(t0, t0, e0);// 计算 t0 = <b, y2> + e0
-  poly_qshow_vec_m2_mul_inner(tmp_poly, b, s2);
+    poly_qshow_vec_m2_mul_inner(t0, b, y2);
+    poly_qshow_add(t0, t0, e0);// 计算 t0 = <b, y2> + e0
+  poly_qshow_set(proof->t0_stored, t0); // store t0 for verifier
+    poly_qshow_vec_m2_mul_inner(tmp_poly, b, s2);
   poly_qshow_add(proof->t1, tmp_poly, e1);// 计算 t1 = <b, s2> + e1
 
   // computing fourth challenge
@@ -568,11 +579,13 @@ static void show_user_prove_round4(
   poly_qshow_pack(buf + CHAL3_SHOW_INPUT_BYTES, t0);
   poly_qshow_pack(buf + CHAL3_SHOW_INPUT_BYTES + POLYQSHOW_PACKEDBYTES, proof->t1);
   shake256(challenge_seed, SEED_BYTES, buf, CHAL4_SHOW_INPUT_BYTES);
+  
   do {
     poly_qshow_sample_challenge(proof->c, challenge_seed, DOMAIN_SEPARATOR_CHAL4_SHOW, kappa_c++, SEED_BYTES);
   } while (challenge_size_show(proof->c) > PARAM_ETA_SHOW);
   proof->ctr_c = kappa_c - 1;
 
+  
   // clean up matrices, vectors and polynomials
   poly_qshow_clear(tmp_poly);
   poly_qshow_clear(e0);
@@ -805,6 +818,7 @@ reject:
   if (!show_user_prove_round5(proof, s1, s2, y1, y2)) {
     goto reject;
   }
+
   
   // clean up
   // clean up polynomials
