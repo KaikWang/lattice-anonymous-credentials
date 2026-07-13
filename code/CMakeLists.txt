@@ -10,6 +10,7 @@ add_executable(test)
 add_executable(bench)
 add_executable(lnp22_test)
 add_executable(huffman_test)
+add_executable(acc_test)
 
 set(SRC_DIR "${CMAKE_SOURCE_DIR}/src")
 set(TEST_DIR "${CMAKE_SOURCE_DIR}/test")
@@ -70,6 +71,7 @@ set(SOURCES_LAC
   "${SRC_DIR}/fips202.c"
   "${SRC_DIR}/random.c"
   "${SRC_DIR}/randombytes.c"
+  "${SRC_DIR}/acc_genpp.c"
   "${SRC_DIR}/sep.c"
   "${SRC_DIR}/osig.c"
   "${SRC_DIR}/osig_prove.c"
@@ -98,6 +100,7 @@ target_sources(lnp22_test PUBLIC
 target_include_directories(test PUBLIC ${INCLUDE_DIR})
 target_include_directories(bench PUBLIC ${INCLUDE_DIR} ${BENCH_DIR})
 target_include_directories(lnp22_test PUBLIC ${INCLUDE_DIR})
+target_include_directories(acc_test PUBLIC ${INCLUDE_DIR})
 
 set(WARN_ERROR_FLAGS
   -Wall -Wextra -Wundef -Wshadow -Wpointer-arith
@@ -137,6 +140,15 @@ target_link_libraries(test PUBLIC m)
 
 target_link_libraries(lnp22_test PUBLIC "${CMAKE_SOURCE_DIR}/libs/flint/libflint.so")
 target_link_libraries(lnp22_test PUBLIC m)
+
+target_sources(acc_test PUBLIC
+  "${TEST_DIR}/acc_test.c"
+  "${SOURCES_LAC}")
+
+target_compile_options(acc_test PUBLIC ${WARN_ERROR_FLAGS} ${TEST_OPTS} ${SANITIZER_FLAGS})
+target_link_options(acc_test PUBLIC ${TEST_OPTS} ${SANITIZER_FLAGS})
+target_link_libraries(acc_test PUBLIC "${CMAKE_SOURCE_DIR}/libs/flint/libflint.so")
+target_link_libraries(acc_test PUBLIC m)
 
 target_link_libraries(bench PUBLIC "${CMAKE_SOURCE_DIR}/libs/flint/libflint.so")
 target_link_libraries(bench PUBLIC m)
