@@ -90,20 +90,27 @@ static int osig_signing_test(void)
     osig_user_keygen(&upk, &usk, pk.seed);
     for (j = 0; j < NSUBTESTS; j++)
     {
+      uint32_t handle = 0x10203040u + (uint32_t)i * 17u + (uint32_t)j;
       randombytes(msg, PARAM_M*PARAM_N/8);
-      osig_user_commit(r, cmt, msg, &upk);
+      osig_user_commit_handle(r, cmt, msg, &upk, handle);
       osig_signer_sign_commitment(&sig, state, &sk, &pk, cmt);
       osig_user_sig_complete(&sig, r);
-      if (!osig_user_verify(&sig, &pk, &upk, msg))
+      if (!osig_user_verify_handle(&sig, &pk, &upk, msg, handle))
       {
-        printf("osig_user_verify returned zero for a valid signature.\n");
+        printf("osig_user_verify_handle returned zero for a valid signature.\n");
+        rval = 0;
+        goto osig_signing_test_cleanup;
+      }
+      if (osig_user_verify_handle(&sig, &pk, &upk, msg, handle ^ 1u))
+      {
+        printf("osig_user_verify_handle returned non-zero for a valid signature on the wrong handle.\n");
         rval = 0;
         goto osig_signing_test_cleanup;
       }
       msg[0] ^= 1;
-      if (osig_user_verify(&sig, &pk, &upk, msg))
+      if (osig_user_verify_handle(&sig, &pk, &upk, msg, handle))
       {
-        printf("osig_user_verify returned non-zero for a valid signature on the wrong message.\n");
+        printf("osig_user_verify_handle returned non-zero for a valid signature on the wrong message.\n");
         rval = 0;
         goto osig_signing_test_cleanup;
       }
@@ -241,10 +248,9 @@ static int show_proof_test(void)
   show_proof_t proof;
   poly_q_vec_d r[2];
   poly_q_vec_d cmt;
-  coeff_qshow coeff;
   poly_qshow_vec_m1 s1;
   poly_qshow_vec_k u_embed[PARAM_D];
-  poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D], B_embed[PARAM_D][PARAM_D*PARAM_K]; poly_qshow_vec_k A3_embed[PARAM_D];
+  poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D], B_embed[PARAM_D][PARAM_D*PARAM_K], A3_embed[PARAM_D];
   poly_qshow_mat_k_k D_embed[PARAM_D][PARAM_M], Ds_embed[PARAM_D][2*PARAM_D];
   uint8_t state[STATE_BYTES], msg[PARAM_M*PARAM_N/8], crs_seed[CRS_SEED_BYTES];
   randombytes(state, STATE_BYTES);
@@ -273,7 +279,7 @@ static int show_proof_test(void)
     {
       poly_qshow_mat_k_k_init(B_embed[i][j]);
     }
-    poly_qshow_vec_k_init(A3_embed[i]);
+    poly_qshow_mat_k_k_init(A3_embed[i]);
     for (j = 0; j < PARAM_M; j++)
     {
       poly_qshow_mat_k_k_init(D_embed[i][j]);
@@ -341,7 +347,7 @@ show_proof_test_cleanup:
     {
       poly_qshow_mat_k_k_clear(B_embed[i][j]);
     }
-    poly_qshow_vec_k_clear(A3_embed[i]);
+    poly_qshow_mat_k_k_clear(A3_embed[i]);
     for (j = 0; j < PARAM_M; j++)
     {
       poly_qshow_mat_k_k_clear(D_embed[i][j]);
@@ -553,7 +559,7 @@ static void dump_show_proof_and_witness(void)
   poly_q_vec_d cmt;
   poly_qshow_vec_m1 s1;
   poly_qshow_vec_k u_embed[PARAM_D];
-  poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D], B_embed[PARAM_D][PARAM_D*PARAM_K]; poly_qshow_vec_k A3_embed[PARAM_D];
+  poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D], B_embed[PARAM_D][PARAM_D*PARAM_K], A3_embed[PARAM_D];
   poly_qshow_mat_k_k D_embed[PARAM_D][PARAM_M], Ds_embed[PARAM_D][2 * PARAM_D];
   uint8_t state[STATE_BYTES], msg[PARAM_M * PARAM_N / 8], crs_seed[CRS_SEED_BYTES];
   uint8_t *packed_buf = NULL;
@@ -606,8 +612,7 @@ static void dump_show_proof_and_witness(void)
     }
     for (j = 0; j < PARAM_D * PARAM_K; j++)
       poly_qshow_mat_k_k_init(B_embed[i][j]);
-    for (j = 0; j < PARAM_K; j++)
-      poly_qshow_vec_k_init(A3_embed[i]); /* was mat_k_k_init */
+    poly_qshow_mat_k_k_init(A3_embed[i]);
     for (j = 0; j < PARAM_M; j++)
       poly_qshow_mat_k_k_init(D_embed[i][j]);
   }
@@ -719,8 +724,7 @@ static void dump_show_proof_and_witness(void)
     }
     for (j = 0; j < PARAM_D * PARAM_K; j++)
       poly_qshow_mat_k_k_clear(B_embed[i][j]);
-    for (j = 0; j < PARAM_K; j++)
-      poly_qshow_vec_k_clear(A3_embed[i]); /* was mat_k_k_clear */
+    poly_qshow_mat_k_k_clear(A3_embed[i]);
     for (j = 0; j < PARAM_M; j++)
       poly_qshow_mat_k_k_clear(D_embed[i][j]);
   }

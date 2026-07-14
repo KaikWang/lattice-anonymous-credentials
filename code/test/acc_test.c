@@ -11,15 +11,17 @@ static int acc_genpp_lifecycle_test(void) {
   acc_genpp_state_t st;
   acc_genpp_wit_t sx1, sx2, sx1_sync;
   acc_genpp_update_t msg;
+  acc_genpp_update_t missing[ACC_GENPP_BML_CAPACITY];
+  size_t missing_len = 0;
   poly_q_vec_d A0, A1, A2;
   const uint32_t x1 = 0x10203040u;
   const uint32_t x2 = 0x55667788u;
 
   printf("\nacc_genpp_lifecycle_test\n");
-  printf("acc size: %zu bytes, compact witness size: %zu bytes, full witness struct payload: %zu bytes\n",
-         acc_genpp_acc_size_bytes(),
-         acc_genpp_wit_compact_size_bytes(),
-         acc_genpp_wit_full_size_bytes());
+  printf("acc size: %.2f KB, compact witness size: %.2f KB, full witness struct payload: %.2f KB\n",
+         acc_genpp_acc_size_bytes() / 1024.0,
+         acc_genpp_wit_compact_size_bytes() / 1024.0,
+         acc_genpp_wit_full_size_bytes() / 1024.0);
 
   acc_genpp_pp_init(&pp);
   acc_genpp_td_init(&td);
@@ -65,15 +67,32 @@ static int acc_genpp_lifecycle_test(void) {
     ok = 0;
     goto cleanup;
   }
+  if (msg.seq != 1 || msg.op != ACC_GENPP_OP_DEL || msg.handle != x1) {
+    printf("Delete(x1) produced an unexpected upmsg.\n");
+    ok = 0;
+    goto cleanup;
+  }
   if (acc_genpp_memver(&pp, A2, x1, &sx1)) {
     printf("MemVer(x1) unexpectedly accepted a deleted member without update.\n");
     ok = 0;
     goto cleanup;
   }
 
-  acc_genpp_memwitup(&sx2, &pp, x2, &msg);
+  if (!acc_genpp_bml_get_missing(&st, 0, missing, ACC_GENPP_BML_CAPACITY, &missing_len) ||
+      missing_len != 1 || missing[0].seq != msg.seq || missing[0].handle != msg.handle) {
+    printf("BML failed to return the missed Delete(x1) broadcast.\n");
+    ok = 0;
+    goto cleanup;
+  }
+  acc_genpp_memwitup(&sx2, &pp, x2, &missing[0]);
   if (!acc_genpp_memver(&pp, A2, x2, &sx2)) {
     printf("MemWitUp/MemVer(x2) failed after Delete(x1).\n");
+    ok = 0;
+    goto cleanup;
+  }
+  if (!acc_genpp_bml_get_missing(&st, msg.seq, missing, ACC_GENPP_BML_CAPACITY, &missing_len) ||
+      missing_len != 0) {
+    printf("BML unexpectedly returned broadcasts for an up-to-date witness.\n");
     ok = 0;
     goto cleanup;
   }

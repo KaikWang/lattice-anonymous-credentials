@@ -11,8 +11,10 @@ add_executable(bench)
 add_executable(lnp22_test)
 add_executable(huffman_test)
 add_executable(acc_test)
+add_executable(revocable_ac_test)
 
 set(SRC_DIR "${CMAKE_SOURCE_DIR}/src")
+set(ENTITIES_DIR "${CMAKE_SOURCE_DIR}/entities")
 set(TEST_DIR "${CMAKE_SOURCE_DIR}/test")
 set(BENCH_DIR "${CMAKE_SOURCE_DIR}/bench")
 set(INCLUDE_DIR
@@ -72,6 +74,10 @@ set(SOURCES_LAC
   "${SRC_DIR}/random.c"
   "${SRC_DIR}/randombytes.c"
   "${SRC_DIR}/acc_genpp.c"
+  "${ENTITIES_DIR}/common/revocable_ac.c"
+  "${ENTITIES_DIR}/ta/revac_ta.c"
+  "${ENTITIES_DIR}/uav/revac_uav.c"
+  "${ENTITIES_DIR}/gcs/revac_gcs.c"
   "${SRC_DIR}/sep.c"
   "${SRC_DIR}/osig.c"
   "${SRC_DIR}/osig_prove.c"
@@ -101,6 +107,7 @@ target_include_directories(test PUBLIC ${INCLUDE_DIR})
 target_include_directories(bench PUBLIC ${INCLUDE_DIR} ${BENCH_DIR})
 target_include_directories(lnp22_test PUBLIC ${INCLUDE_DIR})
 target_include_directories(acc_test PUBLIC ${INCLUDE_DIR})
+target_include_directories(revocable_ac_test PUBLIC ${INCLUDE_DIR})
 
 set(WARN_ERROR_FLAGS
   -Wall -Wextra -Wundef -Wshadow -Wpointer-arith
@@ -149,6 +156,15 @@ target_compile_options(acc_test PUBLIC ${WARN_ERROR_FLAGS} ${TEST_OPTS} ${SANITI
 target_link_options(acc_test PUBLIC ${TEST_OPTS} ${SANITIZER_FLAGS})
 target_link_libraries(acc_test PUBLIC "${CMAKE_SOURCE_DIR}/libs/flint/libflint.so")
 target_link_libraries(acc_test PUBLIC m)
+
+target_sources(revocable_ac_test PUBLIC
+  "${TEST_DIR}/revocable_ac_test.c"
+  "${SOURCES_LAC}")
+
+target_compile_options(revocable_ac_test PUBLIC ${WARN_ERROR_FLAGS} ${TEST_OPTS} ${SANITIZER_FLAGS})
+target_link_options(revocable_ac_test PUBLIC ${TEST_OPTS} ${SANITIZER_FLAGS})
+target_link_libraries(revocable_ac_test PUBLIC "${CMAKE_SOURCE_DIR}/libs/flint/libflint.so")
+target_link_libraries(revocable_ac_test PUBLIC m)
 
 target_link_libraries(bench PUBLIC "${CMAKE_SOURCE_DIR}/libs/flint/libflint.so")
 target_link_libraries(bench PUBLIC m)

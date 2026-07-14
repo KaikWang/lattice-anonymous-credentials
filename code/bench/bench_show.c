@@ -18,7 +18,7 @@ double show_user_embed_bench(timer* t) {
 	poly_q_vec_d cmt;
 	poly_qshow_vec_m1 s1;
 	poly_qshow_vec_k u_embed[PARAM_D];
-	poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D], B_embed[PARAM_D][PARAM_D*PARAM_K], A3_embed[PARAM_D][PARAM_K];
+	poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D], B_embed[PARAM_D][PARAM_D*PARAM_K], A3_embed[PARAM_D];
 	poly_qshow_mat_k_k D_embed[PARAM_D][PARAM_M], Ds_embed[PARAM_D][2*PARAM_D];
 	uint8_t state[STATE_BYTES], msg[PARAM_M*PARAM_N/8], crs_seed[CRS_SEED_BYTES];
 	randombytes(state, STATE_BYTES);
@@ -40,9 +40,7 @@ double show_user_embed_bench(timer* t) {
 		for (j = 0; j < PARAM_D*PARAM_K; j++) {
 			poly_qshow_mat_k_k_init(B_embed[i][j]);
 		}
-		for (j = 0; j < PARAM_K; j++) {
-			poly_qshow_mat_k_k_init(A3_embed[i][j]);
-		}
+		poly_qshow_mat_k_k_init(A3_embed[i]);
 		for (j = 0; j < PARAM_M; j++) {
 			poly_qshow_mat_k_k_init(D_embed[i][j]);
 		}
@@ -76,9 +74,7 @@ double show_user_embed_bench(timer* t) {
 		for (j = 0; j < PARAM_D*PARAM_K; j++) {
 			poly_qshow_mat_k_k_clear(B_embed[i][j]);
 		}
-		for (j = 0; j < PARAM_K; j++) {
-			poly_qshow_mat_k_k_clear(A3_embed[i][j]);
-		}
+		poly_qshow_mat_k_k_clear(A3_embed[i]);
 		for (j = 0; j < PARAM_M; j++) {
 			poly_qshow_mat_k_k_clear(D_embed[i][j]);
 		}
@@ -99,7 +95,7 @@ double show_user_prove_bench(timer* t) {
 	poly_q_vec_d cmt;
 	poly_qshow_vec_m1 s1;
 	poly_qshow_vec_k u_embed[PARAM_D];
-	poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D], B_embed[PARAM_D][PARAM_D*PARAM_K], A3_embed[PARAM_D][PARAM_K];
+	poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D], B_embed[PARAM_D][PARAM_D*PARAM_K], A3_embed[PARAM_D];
 	poly_qshow_mat_k_k D_embed[PARAM_D][PARAM_M], Ds_embed[PARAM_D][2*PARAM_D];
 	uint8_t state[STATE_BYTES], msg[PARAM_M*PARAM_N/8], crs_seed[CRS_SEED_BYTES];
 	randombytes(state, STATE_BYTES);
@@ -122,9 +118,7 @@ double show_user_prove_bench(timer* t) {
 		for (j = 0; j < PARAM_D*PARAM_K; j++) {
 			poly_qshow_mat_k_k_init(B_embed[i][j]);
 		}
-		for (j = 0; j < PARAM_K; j++) {
-			poly_qshow_mat_k_k_init(A3_embed[i][j]);
-		}
+		poly_qshow_mat_k_k_init(A3_embed[i]);
 		for (j = 0; j < PARAM_M; j++) {
 			poly_qshow_mat_k_k_init(D_embed[i][j]);
 		}
@@ -160,9 +154,7 @@ double show_user_prove_bench(timer* t) {
 		for (j = 0; j < PARAM_D*PARAM_K; j++) {
 			poly_qshow_mat_k_k_clear(B_embed[i][j]);
 		}
-		for (j = 0; j < PARAM_K; j++) {
-			poly_qshow_mat_k_k_clear(A3_embed[i][j]);
-		}
+		poly_qshow_mat_k_k_clear(A3_embed[i]);
 		for (j = 0; j < PARAM_M; j++) {
 			poly_qshow_mat_k_k_clear(D_embed[i][j]);
 		}
@@ -183,7 +175,7 @@ double show_user_verify_valid_bench(timer* t) {
 	poly_q_vec_d cmt;
 	poly_qshow_vec_m1 s1;
 	poly_qshow_vec_k u_embed[PARAM_D];
-	poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D], B_embed[PARAM_D][PARAM_D*PARAM_K], A3_embed[PARAM_D][PARAM_K];
+	poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D], B_embed[PARAM_D][PARAM_D*PARAM_K], A3_embed[PARAM_D];
 	poly_qshow_mat_k_k D_embed[PARAM_D][PARAM_M], Ds_embed[PARAM_D][2*PARAM_D];
 	uint8_t state[STATE_BYTES], msg[PARAM_M*PARAM_N/8], crs_seed[CRS_SEED_BYTES];
 	randombytes(state, STATE_BYTES);
@@ -206,9 +198,7 @@ double show_user_verify_valid_bench(timer* t) {
 		for (j = 0; j < PARAM_D*PARAM_K; j++) {
 			poly_qshow_mat_k_k_init(B_embed[i][j]);
 		}
-		for (j = 0; j < PARAM_K; j++) {
-			poly_qshow_mat_k_k_init(A3_embed[i][j]);
-		}
+		poly_qshow_mat_k_k_init(A3_embed[i]);
 		for (j = 0; j < PARAM_M; j++) {
 			poly_qshow_mat_k_k_init(D_embed[i][j]);
 		}
@@ -248,9 +238,7 @@ double show_user_verify_valid_bench(timer* t) {
 		for (j = 0; j < PARAM_D*PARAM_K; j++) {
 			poly_qshow_mat_k_k_clear(B_embed[i][j]);
 		}
-		for (j = 0; j < PARAM_K; j++) {
-			poly_qshow_mat_k_k_clear(A3_embed[i][j]);
-		}
+		poly_qshow_mat_k_k_clear(A3_embed[i]);
 		for (j = 0; j < PARAM_M; j++) {
 			poly_qshow_mat_k_k_clear(D_embed[i][j]);
 		}
@@ -272,7 +260,7 @@ double show_user_verify_invalid_bench(timer* t) {
 	coeff_qshow coeff;
 	poly_qshow_vec_m1 s1;
 	poly_qshow_vec_k u_embed[PARAM_D];
-	poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D], B_embed[PARAM_D][PARAM_D*PARAM_K], A3_embed[PARAM_D][PARAM_K];
+	poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D], B_embed[PARAM_D][PARAM_D*PARAM_K], A3_embed[PARAM_D];
 	poly_qshow_mat_k_k D_embed[PARAM_D][PARAM_M], Ds_embed[PARAM_D][2*PARAM_D];
 	uint8_t state[STATE_BYTES], msg[PARAM_M*PARAM_N/8], crs_seed[CRS_SEED_BYTES];
 	randombytes(state, STATE_BYTES);
@@ -295,9 +283,7 @@ double show_user_verify_invalid_bench(timer* t) {
 		for (j = 0; j < PARAM_D*PARAM_K; j++) {
 			poly_qshow_mat_k_k_init(B_embed[i][j]);
 		}
-		for (j = 0; j < PARAM_K; j++) {
-			poly_qshow_mat_k_k_init(A3_embed[i][j]);
-		}
+		poly_qshow_mat_k_k_init(A3_embed[i]);
 		for (j = 0; j < PARAM_M; j++) {
 			poly_qshow_mat_k_k_init(D_embed[i][j]);
 		}
@@ -339,9 +325,7 @@ double show_user_verify_invalid_bench(timer* t) {
 		for (j = 0; j < PARAM_D*PARAM_K; j++) {
 			poly_qshow_mat_k_k_clear(B_embed[i][j]);
 		}
-		for (j = 0; j < PARAM_K; j++) {
-			poly_qshow_mat_k_k_clear(A3_embed[i][j]);
-		}
+		poly_qshow_mat_k_k_clear(A3_embed[i]);
 		for (j = 0; j < PARAM_M; j++) {
 			poly_qshow_mat_k_k_clear(D_embed[i][j]);
 		}
