@@ -14,7 +14,8 @@
 
 typedef enum {
   REVAC_ACC_ZK_NONE = 0,
-  REVAC_ACC_ZK_LABRADOR_MEMVER = 1
+  REVAC_ACC_ZK_LABRADOR_MEMVER = 1,
+  REVAC_ACC_ZK_LABRADOR_MEMVER_DEFLATE = 2
 } revac_acc_zk_kind_t;
 
 typedef struct {

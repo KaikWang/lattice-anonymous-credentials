@@ -20,4 +20,11 @@ int revac_uav_show_prove(revac_show_proof_t *proof,
                          const uint8_t msg[PARAM_M * PARAM_N / 8],
                          const uint8_t nonce[REVAC_SHOW_NONCE_BYTES]);
 
+int revac_uav_show_prove_wire(uint8_t **wire,
+                              size_t *wire_len,
+                              const revac_ta_t *ta,
+                              const revac_uav_t *uav,
+                              const uint8_t msg[PARAM_M * PARAM_N / 8],
+                              const uint8_t nonce[REVAC_SHOW_NONCE_BYTES]);
+
 #endif

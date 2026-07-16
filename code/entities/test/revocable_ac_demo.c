@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "arith.h"
@@ -26,9 +27,10 @@ static int revac_plan_process_demo(void) {
   revac_ta_t ta;
   revac_uav_t uav1, uav2, uav3;
   revac_gcs_t gcs;
-  revac_show_proof_t show1;
   revac_show_context_t show1_ctx;
   acc_genpp_update_t revoke_uav1, revoke_uav2;
+  uint8_t *show1_wire = NULL;
+  size_t show1_wire_len = 0;
   uint8_t nonce1[REVAC_SHOW_NONCE_BYTES];
   uint8_t msg1[PARAM_M * PARAM_N / 8];
   uint8_t msg2[PARAM_M * PARAM_N / 8];
@@ -41,7 +43,6 @@ static int revac_plan_process_demo(void) {
   revac_uav_init(&uav2);
   revac_uav_init(&uav3);
   revac_gcs_init(&gcs);
-  revac_show_proof_init(&show1);
   revac_show_context_init(&show1_ctx);
 
   printf("[phase 1] TA setup, anonymous credential keygen, AccGen, BML init\n");
@@ -105,27 +106,33 @@ static int revac_plan_process_demo(void) {
 
   printf("[phase 3b] anonymous show proof API without clear handle/witness at GCS\n");
   revac_show_context_from_ta(&show1_ctx, &ta, uav1.pk.seed);
-  if (!expect_true(revac_uav_show_prove(&show1, &ta, &uav1, msg1, nonce1),
-                   "UAV1 failed to produce handle-bound show proof.") ||
-      !expect_true(revac_gcs_verify_show_signature(&ta, &gcs, &show1_ctx, &show1),
-                   "GCS failed to verify handle-bound signature show proof.")) {
+  if (!expect_true(revac_uav_show_prove_wire(&show1_wire, &show1_wire_len,
+                                             &ta, &uav1, msg1, nonce1),
+                   "UAV1 failed to produce compressed revocable show packet.") ||
+      !expect_true(revac_gcs_verify_show_signature_wire(&ta, &gcs, &show1_ctx,
+                                                        show1_wire,
+                                                        show1_wire_len),
+                   "GCS failed to verify compressed signature show proof.")) {
     ok = 0;
     goto cleanup;
   }
+  printf(": compressed show packet size %.2f KB\n", show1_wire_len / 1000.0);
   if (revac_labrador_online_enabled()) {
-    if (!expect_true(revac_gcs_verify_show(&ta, &gcs, &show1_ctx, &show1),
-                     "GCS failed to verify full Labrador-backed revocable show proof.")) {
+    if (!expect_true(revac_gcs_verify_show_wire(&ta, &gcs, &show1_ctx,
+                                                show1_wire, show1_wire_len),
+                     "GCS failed to verify compressed Labrador-backed revocable show proof.")) {
       ok = 0;
       goto cleanup;
     }
-    printf(": signature show proof and Labrador MemVer proof passed\n");
+    printf(": compressed signature show proof and Labrador MemVer proof passed\n");
   } else {
-    if (!expect_false(revac_gcs_verify_show(&ta, &gcs, &show1_ctx, &show1),
-                      "GCS accepted a full revocable show proof without AccGenpp ZK proof.")) {
+    if (!expect_false(revac_gcs_verify_show_wire(&ta, &gcs, &show1_ctx,
+                                                 show1_wire, show1_wire_len),
+                      "GCS accepted a compressed full revocable show proof without AccGenpp ZK proof.")) {
       ok = 0;
       goto cleanup;
     }
-    printf(": signature show proof passed; full revocation-ZK gate correctly requires AccGenpp proof\n");
+    printf(": compressed signature show proof passed; full revocation-ZK gate correctly requires AccGenpp proof\n");
   }
 
   printf("[phase 4] Delete, broadcast update, MemWitUp, BML recovery, MemWitSync fallback\n");
@@ -191,7 +198,7 @@ static int revac_plan_process_demo(void) {
   printf(": revocation, stale rejection, and MemWitSync fallback passed\n");
 
 cleanup:
-  revac_show_proof_clear(&show1);
+  free(show1_wire);
   revac_show_context_clear(&show1_ctx);
   revac_gcs_clear(&gcs);
   revac_uav_clear(&uav3);

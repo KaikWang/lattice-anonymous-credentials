@@ -2,6 +2,7 @@
 
 #include "arith.h"
 #include "poly_q_sampling.h"
+#include "revac_proof_codec.h"
 
 #include <errno.h>
 #include <stdio.h>
@@ -363,21 +364,33 @@ int revac_labrador_memver_verify(const revac_ta_t *ta,
                                  const revac_show_proof_t *proof) {
   char json_path[64] = {0};
   char proof_path[64] = {0};
+  uint8_t *raw_proof = NULL;
+  const uint8_t *proof_bytes = proof->acc_zk_proof;
+  size_t proof_len = proof->acc_zk_proof_len;
   int ok = 0;
 
   if (proof->acc_zk_proof == NULL || proof->acc_zk_proof_len == 0) {
     return 0;
   }
+  if (proof->acc_zk_kind == REVAC_ACC_ZK_LABRADOR_MEMVER_DEFLATE) {
+    if (!revac_deflate_unpack(&raw_proof, &proof_len, proof->acc_zk_proof,
+                              proof->acc_zk_proof_len)) {
+      return 0;
+    }
+    proof_bytes = raw_proof;
+  } else if (proof->acc_zk_kind != REVAC_ACC_ZK_LABRADOR_MEMVER) {
+    return 0;
+  }
   if (!write_json_temp(json_path, ta, ctx->acc, NULL)) {
     goto cleanup;
   }
-  if (!write_bytes_temp(proof_path, proof->acc_zk_proof,
-                        proof->acc_zk_proof_len)) {
+  if (!write_bytes_temp(proof_path, proof_bytes, proof_len)) {
     goto cleanup;
   }
   ok = run_labrador("verify", json_path, "--proof-in", proof_path);
 
 cleanup:
+  free(raw_proof);
   if (json_path[0]) {
     unlink(json_path);
   }

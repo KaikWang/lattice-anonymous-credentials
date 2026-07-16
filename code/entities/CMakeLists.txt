@@ -8,6 +8,7 @@ set(REVAC_LAZER_PYTHON "/home/wkk/miniconda3/envs/sage/bin/python"
   CACHE FILEPATH "Python interpreter that can import /home/wkk/pq_ac/lazer/python")
 set(REVAC_SDE "/home/wkk/tools/sde-external-10.8.0-2026-03-15-lin/sde64"
   CACHE FILEPATH "Intel SDE executable for AVX-512 Labrador tests")
+find_package(ZLIB REQUIRED)
 
 set(ENTITIES_DIR "${CMAKE_CURRENT_LIST_DIR}")
 set(COMMON_DIR "${ENTITIES_DIR}/common")
@@ -21,6 +22,7 @@ list(FILTER CORE_SOURCES EXCLUDE REGEX ".*/build/.*")
 add_library(revac_entities_core STATIC
   "${COMMON_DIR}/revocable_ac.c"
   "${COMMON_DIR}/revac_labrador_bridge.c"
+  "${COMMON_DIR}/revac_proof_codec.c"
   "${ENTITIES_DIR}/ta/revac_ta.c"
   "${ENTITIES_DIR}/uav/revac_uav.c"
   "${ENTITIES_DIR}/gcs/revac_gcs.c"
@@ -49,6 +51,7 @@ target_compile_options(revac_entities_core PRIVATE
 
 target_link_libraries(revac_entities_core PUBLIC
   "${CORE_DIR}/lib/libflint.so"
+  ZLIB::ZLIB
   m)
 
 set_target_properties(revac_entities_core PROPERTIES
@@ -78,6 +81,12 @@ target_link_libraries(revac_acc_memver_export PRIVATE revac_entities_core)
 set_target_properties(revac_acc_memver_export PROPERTIES
   BUILD_RPATH "${CORE_DIR}/lib")
 
+add_executable(revac_proof_codec_demo
+  "${ENTITIES_DIR}/test/revac_proof_codec_demo.c")
+target_link_libraries(revac_proof_codec_demo PRIVATE revac_entities_core)
+set_target_properties(revac_proof_codec_demo PROPERTIES
+  BUILD_RPATH "${CORE_DIR}/lib")
+
 add_custom_target(revac_same_x_zk_demo
   COMMAND "${REVAC_LAZER_PYTHON}" "${ENTITIES_DIR}/zk_lazer/revac_same_x_demo.py"
   WORKING_DIRECTORY "${ENTITIES_DIR}/zk_lazer"
@@ -91,6 +100,7 @@ add_custom_target(revac_memver_quadratic_zk_demo
 enable_testing()
 add_test(NAME revocable_ac_demo COMMAND revocable_ac_demo)
 add_test(NAME revocable_show_handle_demo COMMAND revocable_show_handle_demo)
+add_test(NAME revac_proof_codec_demo COMMAND revac_proof_codec_demo)
 add_test(NAME revac_same_x_zk_demo
   COMMAND "${REVAC_LAZER_PYTHON}" "${ENTITIES_DIR}/zk_lazer/revac_same_x_demo.py")
 add_test(NAME revac_memver_quadratic_zk_demo

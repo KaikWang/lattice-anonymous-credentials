@@ -22,4 +22,16 @@ int revac_gcs_verify_show(const revac_ta_t *ta,
                           const revac_show_context_t *ctx,
                           const revac_show_proof_t *proof);
 
+int revac_gcs_verify_show_signature_wire(const revac_ta_t *ta,
+                                         const revac_gcs_t *gcs,
+                                         const revac_show_context_t *ctx,
+                                         const uint8_t *wire,
+                                         size_t wire_len);
+
+int revac_gcs_verify_show_wire(const revac_ta_t *ta,
+                               const revac_gcs_t *gcs,
+                               const revac_show_context_t *ctx,
+                               const uint8_t *wire,
+                               size_t wire_len);
+
 #endif

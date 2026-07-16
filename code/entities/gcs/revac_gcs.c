@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "revac_labrador_bridge.h"
+#include "revac_proof_codec.h"
 
 void revac_gcs_init(revac_gcs_t *gcs) {
   memset(gcs, 0, sizeof(*gcs));
@@ -72,10 +73,49 @@ int revac_gcs_verify_show(const revac_ta_t *ta,
   if (!revac_gcs_verify_show_signature(ta, gcs, ctx, proof)) {
     return 0;
   }
-  if (proof->acc_zk_kind != REVAC_ACC_ZK_LABRADOR_MEMVER ||
+  if ((proof->acc_zk_kind != REVAC_ACC_ZK_LABRADOR_MEMVER &&
+       proof->acc_zk_kind != REVAC_ACC_ZK_LABRADOR_MEMVER_DEFLATE) ||
       proof->acc_zk_proof == NULL ||
       proof->acc_zk_proof_len == 0) {
     return 0;
   }
   return revac_labrador_memver_verify(ta, ctx, proof);
+}
+
+int revac_gcs_verify_show_signature_wire(const revac_ta_t *ta,
+                                         const revac_gcs_t *gcs,
+                                         const revac_show_context_t *ctx,
+                                         const uint8_t *wire,
+                                         size_t wire_len) {
+  revac_show_proof_t proof;
+  int ok = 0;
+
+  if (wire == NULL || wire_len == 0) {
+    return 0;
+  }
+  revac_show_proof_init(&proof);
+  if (revac_show_proof_unpack_compact(&proof, wire, wire_len)) {
+    ok = revac_gcs_verify_show_signature(ta, gcs, ctx, &proof);
+  }
+  revac_show_proof_clear(&proof);
+  return ok;
+}
+
+int revac_gcs_verify_show_wire(const revac_ta_t *ta,
+                               const revac_gcs_t *gcs,
+                               const revac_show_context_t *ctx,
+                               const uint8_t *wire,
+                               size_t wire_len) {
+  revac_show_proof_t proof;
+  int ok = 0;
+
+  if (wire == NULL || wire_len == 0) {
+    return 0;
+  }
+  revac_show_proof_init(&proof);
+  if (revac_show_proof_unpack_compact(&proof, wire, wire_len)) {
+    ok = revac_gcs_verify_show(ta, gcs, ctx, &proof);
+  }
+  revac_show_proof_clear(&proof);
+  return ok;
 }

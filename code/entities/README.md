@@ -56,6 +56,35 @@ With `REVAC_LABRADOR_ONLINE=1`, the UAV serializes a Labrador proof into
 `revac_show_proof_t.acc_zk_proof`, and `revac_gcs_verify_show()` verifies those
 proof bytes through `zk_lazer/revac_acc_memver_import_labrador.py`.
 
+The compact transport codec is in `common/revac_proof_codec.c`.  It does two
+things:
+
+- packs the signature show proof with field-aware bit packing plus the existing
+  Huffman tables for Gaussian response vectors;
+- optionally deflate-compresses the Labrador accumulator proof bytes and lets
+  the GCS verifier inflate them before calling the normal Labrador verifier.
+
+Run the codec demo with:
+
+```sh
+cd entities/build
+./revac_proof_codec_demo
+REVAC_LABRADOR_ONLINE=1 ./revac_proof_codec_demo
+```
+
+The online run verifies the compressed accumulator proof bytes end to end.  The
+full `test/revocable_ac_demo.c` flow also uses this compact UAV-to-GCS wire
+format through `revac_uav_show_prove_wire()` and
+`revac_gcs_verify_show_wire()`, and prints the compressed show packet size in
+KB during phase 3b.  The older struct-level APIs remain available for local
+tests, but the entity demo models the compressed transport path.
+
+The same hidden handle `x` is currently present in both the signature-show statement
+and the accumulator MemVer statement, but the production C path still verifies
+them as two proofs.  A single joint proof that cryptographically shares one
+witness variable `x` across both statements still requires merging the show
+protocol and Labrador relation rather than only changing serialization.
+
 The UAV show packet intentionally does not carry `user_seed`, `acc_seq`,
 `acc`, or `crs_seed`.  The GCS-side verifier receives those from a
 `revac_show_context_t`, modeling data synchronized from TA before verification:

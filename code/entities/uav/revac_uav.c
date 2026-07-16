@@ -4,6 +4,7 @@
 
 #include "randombytes.h"
 #include "revac_labrador_bridge.h"
+#include "revac_proof_codec.h"
 
 void revac_uav_init(revac_uav_t *uav) {
   memset(uav, 0, sizeof(*uav));
@@ -101,5 +102,27 @@ int revac_uav_show_prove(revac_show_proof_t *proof,
 cleanup:
   revac_show_lang_clear(A_embed, B_embed, A3_embed, Ds_embed, D_embed, Dx_embed, u_embed);
   poly_qshow_vec_m1_clear(s1);
+  return ok;
+}
+
+int revac_uav_show_prove_wire(uint8_t **wire,
+                              size_t *wire_len,
+                              const revac_ta_t *ta,
+                              const revac_uav_t *uav,
+                              const uint8_t msg[PARAM_M * PARAM_N / 8],
+                              const uint8_t nonce[REVAC_SHOW_NONCE_BYTES]) {
+  revac_show_proof_t proof;
+  int ok = 0;
+
+  *wire = NULL;
+  *wire_len = 0;
+  revac_show_proof_init(&proof);
+  if (!revac_uav_show_prove(&proof, ta, uav, msg, nonce)) {
+    goto cleanup;
+  }
+  ok = revac_show_proof_pack_compact(wire, wire_len, &proof, 1);
+
+cleanup:
+  revac_show_proof_clear(&proof);
   return ok;
 }
