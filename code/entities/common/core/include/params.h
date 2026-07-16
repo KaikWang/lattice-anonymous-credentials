@@ -142,7 +142,7 @@
 #define PARAM_Q1_INVMOD_Q2_SHOW 232961L
 #define PARAM_Q2_INVMOD_Q1_SHOW 234128784321L
 #define PARAM_D_SHOW 23
-#define PARAM_M1_SHOW 179  /* updated for TSampler: v2(KH=2), v3(scalar) */
+#define PARAM_M1_SHOW 183  /* TSampler show witness plus hidden revocation handle x */
 #define PARAM_M2_SHOW 74
 #define PARAM_L_SHOW 7
 #define PARAM_ARP_SHOW 256

@@ -32,6 +32,8 @@
 #define IDX_USK_SHOW (IDX_TAG_SHOW + PARAM_K_SHOW)
 // Starting index for m in s1
 #define IDX_M_SHOW (IDX_USK_SHOW + 2*PARAM_D*PARAM_K_SHOW)
+// Starting index for hidden revocation handle x in s1
+#define IDX_X_SHOW (IDX_M_SHOW + PARAM_M*PARAM_K_SHOW)
 
 typedef struct {
   poly_qshow_vec_d tA;
@@ -51,35 +53,72 @@ void show_proof_init(show_proof_t *proof);
 void show_proof_clear(show_proof_t *proof);
 
 void show_user_embed(
+    poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D],
+    poly_qshow_mat_k_k B_embed[PARAM_D][PARAM_D*PARAM_K],
+    poly_qshow_mat_k_k A3_embed[PARAM_D],
+    poly_qshow_mat_k_k Ds_embed[PARAM_D][2*PARAM_D],
+    poly_qshow_mat_k_k D_embed[PARAM_D][PARAM_M],
+    poly_qshow_vec_k   u_embed[PARAM_D],
+    poly_qshow_vec_m1  s1,
+    const user_pk_t    *upk,
+    const user_sk_t    *usk,
+    const sep_pk_t     *pk,
+    const sep_sig_t    *sig,
+    const uint8_t      msg[PARAM_M*PARAM_N/8]);
+void show_user_embed_handle(
     poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D], 
     poly_qshow_mat_k_k B_embed[PARAM_D][PARAM_D*PARAM_K], 
     poly_qshow_mat_k_k A3_embed[PARAM_D],
     poly_qshow_mat_k_k Ds_embed[PARAM_D][2*PARAM_D], 
     poly_qshow_mat_k_k D_embed[PARAM_D][PARAM_M], 
+    poly_qshow_mat_k_k Dx_embed[PARAM_D],
     poly_qshow_vec_k   u_embed[PARAM_D], 
     poly_qshow_vec_m1  s1, 
     const user_pk_t    *upk, 
     const user_sk_t    *usk, 
     const sep_pk_t     *pk, 
     const sep_sig_t    *sig,
-    const uint8_t      msg[PARAM_M*PARAM_N/8]);
+    const uint8_t      msg[PARAM_M*PARAM_N/8],
+    uint32_t           x);
 void show_user_prove(
+    show_proof_t             *proof,
+    const poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D],
+    const poly_qshow_mat_k_k B_embed[PARAM_D][PARAM_D*PARAM_K],
+    const poly_qshow_mat_k_k A3_embed[PARAM_D],
+    const poly_qshow_mat_k_k Ds_embed[PARAM_D][2*PARAM_D],
+    const poly_qshow_mat_k_k D_embed[PARAM_D][PARAM_M],
+    const poly_qshow_vec_m1  s1,
+    const uint8_t            crs_seed[CRS_SEED_BYTES],
+    const uint8_t            seed[SEED_BYTES]);
+void show_user_prove_handle(
     show_proof_t             *proof, 
     const poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D], 
     const poly_qshow_mat_k_k B_embed[PARAM_D][PARAM_D*PARAM_K], 
     const poly_qshow_mat_k_k A3_embed[PARAM_D],
     const poly_qshow_mat_k_k Ds_embed[PARAM_D][2*PARAM_D], 
     const poly_qshow_mat_k_k D_embed[PARAM_D][PARAM_M], 
+    const poly_qshow_mat_k_k Dx_embed[PARAM_D],
     const poly_qshow_vec_m1  s1, 
     const uint8_t            crs_seed[CRS_SEED_BYTES], 
     const uint8_t            seed[SEED_BYTES]);
 int show_verify(
+    const show_proof_t       *proof,
+    const poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D],
+    const poly_qshow_mat_k_k B_embed[PARAM_D][PARAM_D*PARAM_K],
+    const poly_qshow_mat_k_k A3_embed[PARAM_D],
+    const poly_qshow_mat_k_k Ds_embed[PARAM_D][2*PARAM_D],
+    const poly_qshow_mat_k_k D_embed[PARAM_D][PARAM_M],
+    const poly_qshow_vec_k   u_embed[PARAM_D],
+    const uint8_t            crs_seed[CRS_SEED_BYTES],
+    const uint8_t            seed[SEED_BYTES]);
+int show_verify_handle(
     const show_proof_t       *proof, 
     const poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D], 
     const poly_qshow_mat_k_k B_embed[PARAM_D][PARAM_D*PARAM_K], 
     const poly_qshow_mat_k_k A3_embed[PARAM_D],
     const poly_qshow_mat_k_k Ds_embed[PARAM_D][2*PARAM_D], 
     const poly_qshow_mat_k_k D_embed[PARAM_D][PARAM_M], 
+    const poly_qshow_mat_k_k Dx_embed[PARAM_D],
     const poly_qshow_vec_k   u_embed[PARAM_D], 
     const uint8_t            crs_seed[CRS_SEED_BYTES], 
     const uint8_t            seed[SEED_BYTES]);

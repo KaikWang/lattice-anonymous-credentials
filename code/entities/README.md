@@ -6,6 +6,7 @@ This directory separates the revocable anonymous credential workflow by entity.
 - `ta/`: trusted authority logic: setup, UAV/GCS registration, credential issuance, revocation, and BML maintenance.
 - `uav/`: UAV-side logic: key generation, update application, and missed-broadcast recovery.
 - `gcs/`: ground control station logic: key generation and credential/witness verification.
+- `zk_lazer/`: LaZer/Labrador prototype for the future revocable anonymous show proof.
 
 For deployment experiments, copy the entity directory you need plus `common/`.
 For example, the UAV-side portable package is:
@@ -38,6 +39,45 @@ TA setup, UAV/GCS registration, handle derivation, UAV credential issuance,
 GCS certificate gating, GCS verification, revocation by `Delete`, direct
 broadcast witness update by `MemWitUp`, offline recovery through BML, fallback
 resynchronization by `MemWitSync`, and final verification.
+
+By default, the full demo keeps the expensive Labrador AccGenpp MemVer proof
+disabled so the normal entity test remains quick.  In that mode the GCS verifies
+the anonymous signature-show proof, then correctly rejects the full revocable
+show because no accumulator-membership ZK proof bytes are attached.
+
+To run the online Labrador-backed show path, enable:
+
+```sh
+cd entities/build
+REVAC_LABRADOR_ONLINE=1 ./revocable_ac_demo
+```
+
+With `REVAC_LABRADOR_ONLINE=1`, the UAV serializes a Labrador proof into
+`revac_show_proof_t.acc_zk_proof`, and `revac_gcs_verify_show()` verifies those
+proof bytes through `zk_lazer/revac_acc_memver_import_labrador.py`.
+
+The UAV show packet intentionally does not carry `user_seed`, `acc_seq`,
+`acc`, or `crs_seed`.  The GCS-side verifier receives those from a
+`revac_show_context_t`, modeling data synchronized from TA before verification:
+`user_seed` for rebuilding the public `Dx` matrix, and `acc_seq/acc` for the
+current accumulator state.  The UAV packet contains only the nonce, signature
+show proof, accumulator proof kind, and accumulator proof bytes.
+
+The default paths are:
+
+- `REVAC_LABRADOR_PYTHON=/home/wkk/miniconda3/envs/sage/bin/python`
+- `REVAC_LABRADOR_SDE=/home/wkk/tools/sde-external-10.8.0-2026-03-15-lin/sde64`
+- `REVAC_LABRADOR_SCRIPT=/home/wkk/pq_ac/lattice-anonymous-credentials/code/entities/zk_lazer/revac_acc_memver_import_labrador.py`
+
+Set `REVAC_LABRADOR_USE_SDE=0` only on hardware that can run the LaZer AVX-512
+code directly.  The `zk_lazer/` directory also keeps standalone proof-layer
+demos and import checks:
+
+```sh
+cd entities/zk_lazer
+make describe
+make same-x-demo
+```
 
 The bundled FLINT library may still need compatible system GMP/MPFR runtime
 libraries on the target. The current random backend uses AES-NI intrinsics, so

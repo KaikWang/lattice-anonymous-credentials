@@ -14,4 +14,10 @@ void revac_uav_apply_update(revac_uav_t *uav,
 int revac_uav_recover_updates(revac_uav_t *uav,
                               const revac_ta_t *ta);
 
+int revac_uav_show_prove(revac_show_proof_t *proof,
+                         const revac_ta_t *ta,
+                         const revac_uav_t *uav,
+                         const uint8_t msg[PARAM_M * PARAM_N / 8],
+                         const uint8_t nonce[REVAC_SHOW_NONCE_BYTES]);
+
 #endif

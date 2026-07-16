@@ -5,6 +5,7 @@
 #include "random.h"
 #include "randombytes.h"
 #include "revac_gcs.h"
+#include "revac_labrador_bridge.h"
 #include "revac_ta.h"
 #include "revac_uav.h"
 
@@ -25,7 +26,10 @@ static int revac_plan_process_demo(void) {
   revac_ta_t ta;
   revac_uav_t uav1, uav2, uav3;
   revac_gcs_t gcs;
+  revac_show_proof_t show1;
+  revac_show_context_t show1_ctx;
   acc_genpp_update_t revoke_uav1, revoke_uav2;
+  uint8_t nonce1[REVAC_SHOW_NONCE_BYTES];
   uint8_t msg1[PARAM_M * PARAM_N / 8];
   uint8_t msg2[PARAM_M * PARAM_N / 8];
   uint8_t msg3[PARAM_M * PARAM_N / 8];
@@ -37,6 +41,8 @@ static int revac_plan_process_demo(void) {
   revac_uav_init(&uav2);
   revac_uav_init(&uav3);
   revac_gcs_init(&gcs);
+  revac_show_proof_init(&show1);
+  revac_show_context_init(&show1_ctx);
 
   printf("[phase 1] TA setup, anonymous credential keygen, AccGen, BML init\n");
   revac_ta_setup(&ta);
@@ -56,6 +62,7 @@ static int revac_plan_process_demo(void) {
   randombytes(msg1, sizeof(msg1));
   randombytes(msg2, sizeof(msg2));
   randombytes(msg3, sizeof(msg3));
+  randombytes(nonce1, sizeof(nonce1));
 
   if (!expect_true(revac_ta_register_uav(&ta, &uav1), "UAV1 registration failed.") ||
       !expect_true(revac_ta_register_uav(&ta, &uav2), "UAV2 registration failed.") ||
@@ -95,6 +102,31 @@ static int revac_plan_process_demo(void) {
   }
   gcs.cert_valid = REVAC_GCS_CERT_VALID;
   printf(": issuance, signature verification, MemVer, and GCS cert gate passed\n");
+
+  printf("[phase 3b] anonymous show proof API without clear handle/witness at GCS\n");
+  revac_show_context_from_ta(&show1_ctx, &ta, uav1.pk.seed);
+  if (!expect_true(revac_uav_show_prove(&show1, &ta, &uav1, msg1, nonce1),
+                   "UAV1 failed to produce handle-bound show proof.") ||
+      !expect_true(revac_gcs_verify_show_signature(&ta, &gcs, &show1_ctx, &show1),
+                   "GCS failed to verify handle-bound signature show proof.")) {
+    ok = 0;
+    goto cleanup;
+  }
+  if (revac_labrador_online_enabled()) {
+    if (!expect_true(revac_gcs_verify_show(&ta, &gcs, &show1_ctx, &show1),
+                     "GCS failed to verify full Labrador-backed revocable show proof.")) {
+      ok = 0;
+      goto cleanup;
+    }
+    printf(": signature show proof and Labrador MemVer proof passed\n");
+  } else {
+    if (!expect_false(revac_gcs_verify_show(&ta, &gcs, &show1_ctx, &show1),
+                      "GCS accepted a full revocable show proof without AccGenpp ZK proof.")) {
+      ok = 0;
+      goto cleanup;
+    }
+    printf(": signature show proof passed; full revocation-ZK gate correctly requires AccGenpp proof\n");
+  }
 
   printf("[phase 4] Delete, broadcast update, MemWitUp, BML recovery, MemWitSync fallback\n");
   if (!expect_true(revac_ta_revoke_uav(&ta, uav1.handle, &revoke_uav1),
@@ -159,6 +191,8 @@ static int revac_plan_process_demo(void) {
   printf(": revocation, stale rejection, and MemWitSync fallback passed\n");
 
 cleanup:
+  revac_show_proof_clear(&show1);
+  revac_show_context_clear(&show1_ctx);
   revac_gcs_clear(&gcs);
   revac_uav_clear(&uav3);
   revac_uav_clear(&uav2);

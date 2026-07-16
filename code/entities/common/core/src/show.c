@@ -66,27 +66,36 @@ void show_proof_clear(show_proof_t *proof) {
 *              - const sep_sig_t *sig: pointer to signature structure
 *              - const uint8_t *msg: pointer to input message byte array (allocated PARAM_M*PARAM_N/8 bytes)
 **************************************************/
-void show_user_embed(
+static void show_handle_to_vec(poly_q_vec_d x_vec, uint32_t x) {
+  poly_q_vec_d_zero(x_vec);
+  for (size_t i = 0; i < 32; i++) {
+    poly_q_set_coeff(x_vec->entries[0], i, (coeff_q)((x >> i) & 1u));
+  }
+}
+
+void show_user_embed_handle(
     poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D], 
     poly_qshow_mat_k_k B_embed[PARAM_D][PARAM_D*PARAM_K], 
     poly_qshow_mat_k_k A3_embed[PARAM_D],
     poly_qshow_mat_k_k Ds_embed[PARAM_D][2*PARAM_D], 
     poly_qshow_mat_k_k D_embed[PARAM_D][PARAM_M], 
+    poly_qshow_mat_k_k Dx_embed[PARAM_D],
     poly_qshow_vec_k   u_embed[PARAM_D], 
     poly_qshow_vec_m1  s1, 
     const user_pk_t    *upk, 
     const user_sk_t    *usk, 
     const sep_pk_t     *pk, 
     const sep_sig_t    *sig,
-    const uint8_t      msg[PARAM_M*PARAM_N/8]) {
+    const uint8_t      msg[PARAM_M*PARAM_N/8],
+    uint32_t           x) {
   size_t i,j;
   int64_t bexpi;
   uint64_t norm2sq_v1, norm2sq_v2, norm2sq_v3, four_squares_res[4];
   poly_q tmp_poly;
-  poly_q_mat_d_d A, Ds[2], Btmp;
+  poly_q_mat_d_d A, Ds[2], Btmp, Dx;
   poly_q_vec_d a3;
   poly_q_mat_d_m D;
-  poly_q_vec_d u, v11;
+  poly_q_vec_d u, v11, x_vec;
   poly_q_vec_m m;
   poly_qshow_vec_k tmp_vec_k;
 
@@ -94,12 +103,14 @@ void show_user_embed(
   poly_q_init(tmp_poly);
   poly_q_mat_d_d_init(A);
   poly_q_mat_d_d_init(Btmp);
+  poly_q_mat_d_d_init(Dx);
   poly_q_vec_d_init(a3);
   poly_q_mat_d_m_init(D);
   poly_q_mat_d_d_init(Ds[0]);
   poly_q_mat_d_d_init(Ds[1]);
   poly_q_vec_d_init(u);
   poly_q_vec_d_init(v11);
+  poly_q_vec_d_init(x_vec);
   poly_q_vec_m_init(m);
   poly_qshow_vec_k_init(tmp_vec_k);
 
@@ -109,6 +120,7 @@ void show_user_embed(
   poly_q_mat_d_d_uniform(Ds[0], pk->seed, DOMAIN_SEPARATOR_DS, 0);
   poly_q_mat_d_d_uniform(Ds[1], pk->seed, DOMAIN_SEPARATOR_DS, PARAM_D);
   poly_q_mat_d_m_uniform(D, pk->seed, DOMAIN_SEPARATOR_D);
+  poly_q_mat_d_d_uniform(Dx, upk->seed, DOMAIN_SEPARATOR_DX, 0);
   poly_q_vec_d_uniform(u, pk->seed, DOMAIN_SEPARATOR_U);
 
   // embedding u (u_embed = theta(q1.u))
@@ -124,6 +136,9 @@ void show_user_embed(
   poly_q_mat_d_m_mul_vec_m(v11, D, m);
   poly_q_vec_d_add(v11, v11, u); // u can be used as a temp variable now
   poly_q_vec_d_add(v11, v11, upk->t); // Ds.usk = upk
+  show_handle_to_vec(x_vec, x);
+  poly_q_mat_d_d_mul_vec_d(u, Dx, x_vec);
+  poly_q_vec_d_add(v11, v11, u);
   poly_q_vec_d_mul_poly(u, a3, sig->v3);
   poly_q_mat_d_d_muladd_vec_d(u, A, sig->v12);
   poly_q_vec_d_sub(v11, v11, u);
@@ -216,6 +231,11 @@ void show_user_embed(
       poly_qshow_set(s1->entries[IDX_M_SHOW + i*PARAM_K_SHOW + j], tmp_vec_k->entries[j]);
     }
   }
+  // hidden revocation handle x
+  poly_qshow_subring_embed_vec_k(tmp_vec_k, x_vec->entries[0], 1);
+  for (j = 0; j < PARAM_K_SHOW; j++) {
+    poly_qshow_set(s1->entries[IDX_X_SHOW + j], tmp_vec_k->entries[j]);
+  }
 
   // embedding A, B, A3, D, Ds
   for (i = 0; i < PARAM_D; i++) {
@@ -231,18 +251,46 @@ void show_user_embed(
     for (j = 0; j < PARAM_M; j++) {
       poly_qshow_subring_embed_mat_k_k(D_embed[i][j], D->rows[i]->entries[j], PARAM_Q1_SHOW); // D
     }
+    poly_qshow_subring_embed_mat_k_k(Dx_embed[i], Dx->rows[i]->entries[0], PARAM_Q1_SHOW);
   }
 
   // clean up matrices, vectors and polynomials
   poly_q_clear(tmp_poly);
   poly_q_mat_d_d_clear(A);
   poly_q_mat_d_d_clear(Btmp);
+  poly_q_mat_d_d_clear(Dx);
   poly_q_vec_d_clear(a3);
   poly_q_mat_d_m_clear(D);
   poly_q_mat_d_d_clear(Ds[0]);
   poly_q_mat_d_d_clear(Ds[1]);
   poly_q_vec_d_clear(u);
   poly_q_vec_d_clear(v11);
+  poly_q_vec_d_clear(x_vec);
   poly_q_vec_m_clear(m);
   poly_qshow_vec_k_clear(tmp_vec_k);
+}
+
+void show_user_embed(
+    poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D],
+    poly_qshow_mat_k_k B_embed[PARAM_D][PARAM_D*PARAM_K],
+    poly_qshow_mat_k_k A3_embed[PARAM_D],
+    poly_qshow_mat_k_k Ds_embed[PARAM_D][2*PARAM_D],
+    poly_qshow_mat_k_k D_embed[PARAM_D][PARAM_M],
+    poly_qshow_vec_k   u_embed[PARAM_D],
+    poly_qshow_vec_m1  s1,
+    const user_pk_t    *upk,
+    const user_sk_t    *usk,
+    const sep_pk_t     *pk,
+    const sep_sig_t    *sig,
+    const uint8_t      msg[PARAM_M*PARAM_N/8]) {
+  poly_qshow_mat_k_k Dx_embed[PARAM_D];
+
+  for (size_t i = 0; i < PARAM_D; i++) {
+    poly_qshow_mat_k_k_init(Dx_embed[i]);
+  }
+  show_user_embed_handle(A_embed, B_embed, A3_embed, Ds_embed, D_embed, Dx_embed,
+                         u_embed, s1, upk, usk, pk, sig, msg, 0);
+  for (size_t i = 0; i < PARAM_D; i++) {
+    poly_qshow_mat_k_k_clear(Dx_embed[i]);
+  }
 }

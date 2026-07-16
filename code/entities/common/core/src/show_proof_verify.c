@@ -47,13 +47,14 @@ static void show_mat_k_k_from_vec_k(poly_qshow_mat_k_k res, const poly_qshow_vec
 * 
 * Returns 1 if proof could be verified correctly and 0 otherwise
 **************************************************/
-int show_verify(
+int show_verify_handle(
     const show_proof_t       *proof, 
     const poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D], 
     const poly_qshow_mat_k_k B_embed[PARAM_D][PARAM_D*PARAM_K], 
     const poly_qshow_mat_k_k A3_embed[PARAM_D],
     const poly_qshow_mat_k_k Ds_embed[PARAM_D][2*PARAM_D], 
     const poly_qshow_mat_k_k D_embed[PARAM_D][PARAM_M], 
+    const poly_qshow_mat_k_k Dx_embed[PARAM_D],
     const poly_qshow_vec_k   u_embed[PARAM_D], 
     const uint8_t            crs_seed[CRS_SEED_BYTES], 
     const uint8_t            seed[SEED_BYTES]) {
@@ -401,6 +402,10 @@ int show_verify(
       poly_qshow_mul(tmp_poly, D_embed[i_k_quot][j / PARAM_K_SHOW]->rows[i_k_rem]->entries[j % PARAM_K_SHOW], proof->z1->entries[IDX_M_SHOW + j]);
       poly_qshow_sub(z1s_z1, z1s_z1, tmp_poly); // substraction
     }
+    for (j = 0; j < PARAM_K_SHOW; j++) {
+      poly_qshow_mul(tmp_poly, Dx_embed[i_k_quot]->rows[i_k_rem]->entries[j], proof->z1->entries[IDX_X_SHOW + j]);
+      poly_qshow_sub(z1s_z1, z1s_z1, tmp_poly);
+    }
     poly_qshow_mul(tmp_poly, proof->c, u_embed[i_k_quot]->entries[i_k_rem]);
     poly_qshow_sub(z1s_z1, z1s_z1, tmp_poly);
     poly_qshow_mul(z1s_z1, z1s_z1, chal_3_dk[i_k_quot]->entries[i_k_rem]);
@@ -467,4 +472,29 @@ show_verify_cleanup:
 
   
   return is_valid;
+}
+
+int show_verify(
+    const show_proof_t       *proof,
+    const poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D],
+    const poly_qshow_mat_k_k B_embed[PARAM_D][PARAM_D*PARAM_K],
+    const poly_qshow_mat_k_k A3_embed[PARAM_D],
+    const poly_qshow_mat_k_k Ds_embed[PARAM_D][2*PARAM_D],
+    const poly_qshow_mat_k_k D_embed[PARAM_D][PARAM_M],
+    const poly_qshow_vec_k   u_embed[PARAM_D],
+    const uint8_t            crs_seed[CRS_SEED_BYTES],
+    const uint8_t            seed[SEED_BYTES]) {
+  int ok;
+  poly_qshow_mat_k_k Dx_embed[PARAM_D];
+
+  for (size_t i = 0; i < PARAM_D; i++) {
+    poly_qshow_mat_k_k_init(Dx_embed[i]);
+    poly_qshow_mat_k_k_zero(Dx_embed[i]);
+  }
+  ok = show_verify_handle(proof, A_embed, B_embed, A3_embed, Ds_embed, D_embed,
+                          Dx_embed, u_embed, crs_seed, seed);
+  for (size_t i = 0; i < PARAM_D; i++) {
+    poly_qshow_mat_k_k_clear(Dx_embed[i]);
+  }
+  return ok;
 }

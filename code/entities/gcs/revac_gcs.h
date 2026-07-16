@@ -12,4 +12,14 @@ int revac_gcs_verify_uav(const revac_ta_t *ta,
                          const revac_uav_t *uav,
                          const uint8_t msg[PARAM_M * PARAM_N / 8]);
 
+int revac_gcs_verify_show_signature(const revac_ta_t *ta,
+                                    const revac_gcs_t *gcs,
+                                    const revac_show_context_t *ctx,
+                                    const revac_show_proof_t *proof);
+
+int revac_gcs_verify_show(const revac_ta_t *ta,
+                          const revac_gcs_t *gcs,
+                          const revac_show_context_t *ctx,
+                          const revac_show_proof_t *proof);
+
 #endif

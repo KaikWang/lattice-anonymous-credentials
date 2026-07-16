@@ -354,6 +354,7 @@ static void show_user_prove_round4(
     const poly_qshow_mat_k_k A3_embed[PARAM_D],
     const poly_qshow_mat_k_k     Ds_embed[PARAM_D][2*PARAM_D], 
     const poly_qshow_mat_k_k     D_embed[PARAM_D][PARAM_M], 
+    const poly_qshow_mat_k_k     Dx_embed[PARAM_D],
     const poly_qshow_vec_256     sum_gamma_e_star[PARAM_L_SHOW],
     const poly_qshow_vec_m1      sum_gamma_r_star[PARAM_L_SHOW],
     const poly_qshow_vec_m1      y1,
@@ -580,6 +581,10 @@ static void show_user_prove_round4(
       poly_qshow_mul(tmp_poly, D_embed[i_k_quot][j / PARAM_K_SHOW]->rows[i_k_rem]->entries[j % PARAM_K_SHOW], y1->entries[IDX_M_SHOW + j]);
       poly_qshow_sub(y1s_y1, y1s_y1, tmp_poly); // substraction
     }
+    for (j = 0; j < PARAM_K_SHOW; j++) {
+      poly_qshow_mul(tmp_poly, Dx_embed[i_k_quot]->rows[i_k_rem]->entries[j], y1->entries[IDX_X_SHOW + j]);
+      poly_qshow_sub(y1s_y1, y1s_y1, tmp_poly);
+    }
     poly_qshow_mul(y1s_y1, y1s_y1, chal_3_dk[i_k_quot]->entries[i_k_rem]);
     poly_qshow_add(e1, e1, y1s_y1);
   }
@@ -691,13 +696,14 @@ static int show_user_prove_round5(
 *              - const uint8_t *seed: pointer to byte array containing the seed 
 *                   for public parameters (allocated SEED_BYTES bytes)
 **************************************************/
-void show_user_prove(
+void show_user_prove_handle(
     show_proof_t             *proof, 
     const poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D], 
     const poly_qshow_mat_k_k B_embed[PARAM_D][PARAM_D*PARAM_K], 
     const poly_qshow_mat_k_k A3_embed[PARAM_D],
     const poly_qshow_mat_k_k Ds_embed[PARAM_D][2*PARAM_D], 
     const poly_qshow_mat_k_k D_embed[PARAM_D][PARAM_M], 
+    const poly_qshow_mat_k_k Dx_embed[PARAM_D],
     const poly_qshow_vec_m1  s1, 
     const uint8_t            crs_seed[CRS_SEED_BYTES], 
     const uint8_t            seed[SEED_BYTES]) {
@@ -832,7 +838,10 @@ reject:
   show_user_prove_round3(proof, chal_3_l, chal_3_dk, buf, sum_gamma_e_star, sum_gamma_r_star, s1, chal_1, chal_2, y3_g, quadratic_precomp);
   
   /****** fourth round ******/
-  show_user_prove_round4(proof, buf, s1, s2, Byg, b, A_embed, B_embed, A3_embed, Ds_embed, D_embed, sum_gamma_e_star, sum_gamma_r_star, y1, y2, chal_2, chal_3_l, chal_3_dk, one);
+  show_user_prove_round4(proof, buf, s1, s2, Byg, b, A_embed, B_embed,
+                         A3_embed, Ds_embed, D_embed, Dx_embed,
+                         sum_gamma_e_star, sum_gamma_r_star, y1, y2,
+                         chal_2, chal_3_l, chal_3_dk, one);
 
   /****** fifth round ******/
   if (!show_user_prove_round5(proof, s1, s2, y1, y2)) {
@@ -867,5 +876,28 @@ reject:
   poly_qshow_vec_l_clear(chal_3_l);
   for (i = 0; i < PARAM_D; i++) {
     poly_qshow_vec_k_clear(chal_3_dk[i]);
+  }
+}
+
+void show_user_prove(
+    show_proof_t             *proof,
+    const poly_qshow_mat_k_k A_embed[PARAM_D][PARAM_D],
+    const poly_qshow_mat_k_k B_embed[PARAM_D][PARAM_D*PARAM_K],
+    const poly_qshow_mat_k_k A3_embed[PARAM_D],
+    const poly_qshow_mat_k_k Ds_embed[PARAM_D][2*PARAM_D],
+    const poly_qshow_mat_k_k D_embed[PARAM_D][PARAM_M],
+    const poly_qshow_vec_m1  s1,
+    const uint8_t            crs_seed[CRS_SEED_BYTES],
+    const uint8_t            seed[SEED_BYTES]) {
+  poly_qshow_mat_k_k Dx_embed[PARAM_D];
+
+  for (size_t i = 0; i < PARAM_D; i++) {
+    poly_qshow_mat_k_k_init(Dx_embed[i]);
+    poly_qshow_mat_k_k_zero(Dx_embed[i]);
+  }
+  show_user_prove_handle(proof, A_embed, B_embed, A3_embed, Ds_embed, D_embed,
+                         Dx_embed, s1, crs_seed, seed);
+  for (size_t i = 0; i < PARAM_D; i++) {
+    poly_qshow_mat_k_k_clear(Dx_embed[i]);
   }
 }
